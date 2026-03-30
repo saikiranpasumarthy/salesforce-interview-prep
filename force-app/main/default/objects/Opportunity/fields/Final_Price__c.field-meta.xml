@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Final_Price__c</fullName>
+    <label>Final Price</label>
+    <description>Opportunity Amount after discount is applied. Computed as Amount × (1 - Discount_Percent__c / 100). Stamped by OpportunityPricingService on before insert/update.</description>
+    <precision>18</precision>
+    <scale>2</scale>
+    <type>Currency</type>
+    <externalId>false</externalId>
+    <trackTrending>false</trackTrending>
+</CustomField>

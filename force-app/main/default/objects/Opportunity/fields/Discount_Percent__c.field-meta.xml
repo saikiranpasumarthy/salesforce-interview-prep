@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Discount_Percent__c</fullName>
+    <label>Discount Percent</label>
+    <description>Calculated discount percentage (0–50) stamped by OpportunityPricingService on before insert/update. Source: IDiscountStrategy implementation resolved via DiscountStrategyFactory.</description>
+    <precision>5</precision>
+    <scale>2</scale>
+    <type>Number</type>
+    <externalId>false</externalId>
+    <trackTrending>false</trackTrending>
+</CustomField>
