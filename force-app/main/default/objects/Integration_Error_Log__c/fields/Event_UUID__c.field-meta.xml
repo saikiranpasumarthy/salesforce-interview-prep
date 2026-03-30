@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Event_UUID__c</fullName>
+    <description>Platform Event EventUuid — globally unique identifier for the source event. Used for deduplication if subscriber trigger fires more than once.</description>
+    <externalId>true</externalId>
+    <label>Event UUID</label>
+    <length>36</length>
+    <required>false</required>
+    <trackTrending>false</trackTrending>
+    <type>Text</type>
+    <unique>true</unique>
+</CustomField>
