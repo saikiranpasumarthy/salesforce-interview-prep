@@ -44,12 +44,11 @@ public with sharing class AccountService {
     }
 
     /**
-     * @description Core rating logic — separated for test isolation via @TestVisible.
-     *              Configs must arrive pre-sorted descending by Revenue_Threshold__c
-     *              (highest threshold wins).
+     * @description Core rating logic — public so batch jobs can inject pre-cached CMDT
+     *              configs rather than re-querying on every execute() call. Configs must
+     *              arrive pre-sorted descending by Revenue_Threshold__c (highest wins).
      */
-    @TestVisible
-    private static void applyRatingFromRevenue(
+    public static void applyRatingFromRevenue(
         List<Account> accounts,
         List<Account_Rating_Config__mdt> configs
     ) {

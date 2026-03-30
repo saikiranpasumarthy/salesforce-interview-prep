@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Total_Closed_Won_Revenue__c</fullName>
+    <description>Running total of all Closed Won Opportunity amounts linked to this Account. Populated nightly by OpportunityRollupBatch. Do not edit manually.</description>
+    <externalId>false</externalId>
+    <label>Total Closed Won Revenue</label>
+    <precision>18</precision>
+    <scale>2</scale>
+    <type>Currency</type>
+    <trackHistory>false</trackHistory>
+    <trackTrending>false</trackTrending>
+</CustomField>
