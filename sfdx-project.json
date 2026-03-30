@@ -8,5 +8,5 @@
   "name": "salesforce-interview-prep",
   "namespace": "",
   "sfdcLoginUrl": "https://login.salesforce.com",
-  "sourceApiVersion": "59.0"
+  "sourceApiVersion": "62.0"
 }
