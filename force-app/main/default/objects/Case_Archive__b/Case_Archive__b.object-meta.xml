@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomObject xmlns="http://soap.sforce.com/2006/04/metadata">
+    <label>Case Archive</label>
+    <pluralLabel>Case Archives</pluralLabel>
+    <description>Big Object for long-term Case record storage. Cases closed beyond the retention threshold are archived here via CaseArchiveService. Query requires leading index fields in order: Account_Id__c → Closed_Date__c → Case_Id__c.</description>
+    <deploymentStatus>Deployed</deploymentStatus>
+    <indexes>
+        <fullName>Case_Archive_Primary_Index</fullName>
+        <label>Case Archive Primary Index</label>
+        <fields>
+            <name>Account_Id__c</name>
+            <sortDirection>ASC</sortDirection>
+        </fields>
+        <fields>
+            <name>Closed_Date__c</name>
+            <sortDirection>DESC</sortDirection>
+        </fields>
+        <fields>
+            <name>Case_Id__c</name>
+            <sortDirection>ASC</sortDirection>
+        </fields>
+    </indexes>
+</CustomObject>
