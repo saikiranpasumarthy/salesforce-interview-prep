@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomMetadata xmlns="http://soap.sforce.com/2006/04/metadata"
+                xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+    <label>Existing Business</label>
+    <protected>false</protected>
+    <values>
+        <field>Opportunity_Type__c</field>
+        <value xsi:type="xsd:string">Existing Business</value>
+    </values>
+    <values>
+        <field>Strategy_Class_Name__c</field>
+        <value xsi:type="xsd:string">LoyaltyDiscountStrategy</value>
+    </values>
+    <values>
+        <field>Flat_Rate__c</field>
+        <value xsi:nil="true"/>
+    </values>
+    <values>
+        <field>IsActive__c</field>
+        <value xsi:type="xsd:boolean">true</value>
+    </values>
+</CustomMetadata>
