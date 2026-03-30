@@ -27,6 +27,20 @@ public with sharing class AccountTriggerHandler extends TriggerHandler {
         AccountService.setRatingFromRevenue(newList);
     }
 
+    protected override void afterInsert() {
+        // @future callout — must run after insert so record IDs exist.
+        // Filters to accounts with Industry set to avoid empty callouts.
+        Set<Id> accountsWithIndustry = new Set<Id>();
+        for (Account acc : newList) {
+            if (String.isNotBlank(acc.Industry)) {
+                accountsWithIndustry.add(acc.Id);
+            }
+        }
+        if (!accountsWithIndustry.isEmpty()) {
+            AccountFutureService.enrichWithSicCode(accountsWithIndustry);
+        }
+    }
+
     protected override void beforeUpdate() {
         AccountService.setRatingFromRevenue(newList);
         AccountDomain.validateTypeDowngrade(newList, oldMap);

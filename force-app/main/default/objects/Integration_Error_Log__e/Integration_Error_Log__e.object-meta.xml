@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomObject xmlns="http://soap.sforce.com/2006/04/metadata">
+    <label>Integration Error Log</label>
+    <pluralLabel>Integration Error Logs</pluralLabel>
+    <deploymentStatus>Deployed</deploymentStatus>
+    <description>High-volume platform event published by service and batch layers when DML or callout failures occur. Subscriber trigger writes to Integration_Error_Log__c for persistent storage.</description>
+    <eventType>HighVolume</eventType>
+    <publishBehavior>PublishAfterCommit</publishBehavior>
+</CustomObject>
