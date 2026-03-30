@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Subject__c</fullName>
+    <description>Original Case Subject. Non-indexed — not usable in WHERE clause of Big Object queries.</description>
+    <fieldManageability>DeveloperControlled</fieldManageability>
+    <label>Subject</label>
+    <length>255</length>
+    <type>Text</type>
+</CustomField>
