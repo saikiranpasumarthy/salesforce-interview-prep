@@ -10,7 +10,7 @@ Senior Salesforce Developer | 9+ Years | Architect-Track Preparation
 | Day | Topics | Phase | Status | Files |
 |-----|--------|-------|--------|-------|
 | 1 | Apex Triggers, Trigger Frameworks, Governor Limits | Phase 1 | ✅ Done | [Day 1 →](docs/day-01.md) |
-| 2 | Async Apex: Batch & Queueable, Chaining & Chunking, Stateful Batch | Phase 1 | ⬜ Pending | — |
+| 2 | Async Apex: Batch & Queueable, Chaining & Chunking, Stateful Batch | Phase 1 | ✅ Done | [Day 2 →](docs/day-02.md) |
 | 3 | Async Apex: Future & Scheduled, Platform Events intro, Async Error Handling | Phase 1 | ⬜ Pending | — |
 | 4 | SOQL & SOSL Mastery, Query Optimization, Big Objects & External Objects | Phase 1 | ⬜ Pending | — |
 | 5 | Apex Design Patterns I, Separation of Concerns, Factory & Strategy | Phase 1 | ⬜ Pending | — |
