@@ -15,7 +15,7 @@ Senior Salesforce Developer | 9+ Years | Architect-Track Preparation
 | 4 | SOQL & SOSL Mastery, Query Optimization, Big Objects & External Objects | Phase 1 | ✅ Done | [Day 4 →](docs/day-04.md) |
 | 5 | Apex Design Patterns I, Separation of Concerns, Factory & Strategy | Phase 1 | ✅ Done | [Day 5 →](docs/day-05.md) |
 | 6 | Apex Design Patterns II, Selector Layer, Unit of Work Pattern | Phase 1 | ✅ Done | [Day 6 →](docs/day-06.md) |
-| 7 | Apex Testing Deep Dive, TestDataFactory, Mocking & Stubs | Phase 1 | ⬜ Pending | — |
+| 7 | Apex Testing Deep Dive, TestDataFactory, Mocking & Stubs | Phase 1 | ✅ Done | [Day 7 →](docs/day-07.md) |
 | 8 | LWC Architecture, Component Lifecycle, Shadow DOM & Rendering | Phase 1 | ⬜ Pending | — |
 | 9 | LWC Communication Patterns, Wire Adapters, Custom Events vs PubSub | Phase 1 | ⬜ Pending | — |
 | 10 | LWC Advanced, Navigation & Page Reference, LWC Performance | Phase 1 | ⬜ Pending | — |
