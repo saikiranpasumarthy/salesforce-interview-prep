@@ -1,0 +1,228 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    Opportunity_Won_Tasks — Record-Triggered Flow (After Save)
+
+    PURPOSE
+    ═══════
+    When an Opportunity moves to Closed Won for the first time, create:
+      1. A "Send contract to customer" task (due in 2 days)
+      2. A "Schedule kickoff call" task (due in 7 days)
+
+    WHY AFTER SAVE (NOT BEFORE SAVE)?
+    ══════════════════════════════════
+    After Save is required when:
+      • Creating or updating RELATED records (Tasks, related Contacts, etc.)
+      • The new record's Id is needed (only available after save/commit)
+      • Calling external actions (Send Email Alert, Invocable Apex)
+    Before Save is faster but only allows modifying fields on $Record itself.
+
+    ENTRY CONDITIONS
+    ════════════════
+    filterLogic: StageName Equals 'Closed Won' AND StageName IsChanged
+    Without IsChanged: flow would fire every time a Closed Won opp is saved
+    (e.g., someone edits the Description), creating duplicate tasks each time.
+    IsChanged + specific value = "fires only on the exact transition to Closed Won".
+
+    FAULT PATH BEST PRACTICE
+    ═════════════════════════
+    Every DML element (Record Create, Record Update, Apex Action) should have
+    a fault connector. Without one, an unhandled error silently rolls back the
+    entire transaction including the Opportunity save — the user gets a cryptic
+    "An internal error has occurred" message with no context.
+    Best practice: route fault paths to a custom error handler or Send Email Alert.
+
+    FORMULA VARIABLES: DueDate calculation
+    ══════════════════════════════════════
+    Flow cannot call Apex Date arithmetic inline, but it CAN use formula-type
+    variables. We use a Formula variable to compute TODAY() + 2 and TODAY() + 7.
+    In Screen Flows, use formula resources. In Record-Triggered Flows, assign
+    to a Date variable using the Add operator on a date literal is not supported —
+    instead use a Formula variable of type Date.
+-->
+<Flow xmlns="http://soap.sforce.com/2006/04/metadata">
+    <apiVersion>62.0</apiVersion>
+    <description>When an Opportunity is marked Closed Won (stage change only), creates two follow-up tasks: send contract (due +2 days) and schedule kickoff (due +7 days).</description>
+    <environments>Default</environments>
+    <interviewLabel>Opportunity Won Tasks {!$Flow.CurrentDateTime}</interviewLabel>
+    <label>Opportunity Won Tasks</label>
+    <processMetadataValues>
+        <name>BuilderType</name>
+        <value><stringValue>LightningFlowBuilder</stringValue></value>
+    </processMetadataValues>
+    <processMetadataValues>
+        <name>CanvasMode</name>
+        <value><stringValue>AUTO_LAYOUT_CANVAS</stringValue></value>
+    </processMetadataValues>
+    <processType>AutoLaunchedFlow</processType>
+    <status>Active</status>
+
+    <!-- ═══ FORMULA VARIABLES ════════════════════════════════════════════════ -->
+    <!--
+        Formula variables are evaluated at runtime — they cannot be set via
+        assignment; their value is computed from the formula expression.
+        Use type=Date with a formula expression referencing TODAY().
+    -->
+    <formulas>
+        <name>ContractDueDate</name>
+        <dataType>Date</dataType>
+        <expression>TODAY() + 2</expression>
+    </formulas>
+
+    <formulas>
+        <name>KickoffDueDate</name>
+        <dataType>Date</dataType>
+        <expression>TODAY() + 7</expression>
+    </formulas>
+
+    <!-- ═══ START ════════════════════════════════════════════════════════════ -->
+    <start>
+        <locationX>56</locationX>
+        <locationY>0</locationY>
+        <!-- Entry condition 1: StageName must be Closed Won -->
+        <!-- Entry condition 2: StageName must have changed (ISCHANGED) -->
+        <filterLogic>and</filterLogic>
+        <filters>
+            <field>StageName</field>
+            <operator>EqualTo</operator>
+            <value><stringValue>Closed Won</stringValue></value>
+        </filters>
+        <filters>
+            <field>StageName</field>
+            <operator>IsChanged</operator>
+            <value><booleanValue>true</booleanValue></value>
+        </filters>
+        <object>Opportunity</object>
+        <recordTriggerType>CreateAndUpdate</recordTriggerType>
+        <triggerType>RecordAfterSave</triggerType>
+        <connector>
+            <targetReference>Create_Contract_Task</targetReference>
+        </connector>
+    </start>
+
+    <!-- ═══ RECORD CREATE: Contract task ════════════════════════════════════ -->
+    <recordCreates>
+        <name>Create_Contract_Task</name>
+        <label>Create Contract Task</label>
+        <locationX>56</locationX>
+        <locationY>120</locationY>
+        <!-- Fault connector: on DML error, route to error handler (best practice) -->
+        <faultConnector>
+            <targetReference>Log_Error</targetReference>
+        </faultConnector>
+        <connector>
+            <targetReference>Create_Kickoff_Task</targetReference>
+        </connector>
+        <inputAssignments>
+            <field>Subject</field>
+            <value><stringValue>Send contract to customer</stringValue></value>
+        </inputAssignments>
+        <inputAssignments>
+            <field>ActivityDate</field>
+            <value><elementReference>ContractDueDate</elementReference></value>
+        </inputAssignments>
+        <inputAssignments>
+            <field>Status</field>
+            <value><stringValue>Not Started</stringValue></value>
+        </inputAssignments>
+        <inputAssignments>
+            <field>Priority</field>
+            <value><stringValue>High</stringValue></value>
+        </inputAssignments>
+        <inputAssignments>
+            <field>WhatId</field>
+            <value><elementReference>$Record.Id</elementReference></value>
+        </inputAssignments>
+        <inputAssignments>
+            <field>OwnerId</field>
+            <value><elementReference>$Record.OwnerId</elementReference></value>
+        </inputAssignments>
+        <inputAssignments>
+            <field>Description</field>
+            <value><stringValue>Send signed contract documents for the won opportunity. Cc the Account team.</stringValue></value>
+        </inputAssignments>
+        <object>Task</object>
+        <storeOutputAutomatically>true</storeOutputAutomatically>
+    </recordCreates>
+
+    <!-- ═══ RECORD CREATE: Kickoff task ════════════════════════════════════ -->
+    <recordCreates>
+        <name>Create_Kickoff_Task</name>
+        <label>Create Kickoff Task</label>
+        <locationX>56</locationX>
+        <locationY>240</locationY>
+        <faultConnector>
+            <targetReference>Log_Error</targetReference>
+        </faultConnector>
+        <inputAssignments>
+            <field>Subject</field>
+            <value><stringValue>Schedule kickoff call with customer</stringValue></value>
+        </inputAssignments>
+        <inputAssignments>
+            <field>ActivityDate</field>
+            <value><elementReference>KickoffDueDate</elementReference></value>
+        </inputAssignments>
+        <inputAssignments>
+            <field>Status</field>
+            <value><stringValue>Not Started</stringValue></value>
+        </inputAssignments>
+        <inputAssignments>
+            <field>Priority</field>
+            <value><stringValue>Normal</stringValue></value>
+        </inputAssignments>
+        <inputAssignments>
+            <field>WhatId</field>
+            <value><elementReference>$Record.Id</elementReference></value>
+        </inputAssignments>
+        <inputAssignments>
+            <field>OwnerId</field>
+            <value><elementReference>$Record.OwnerId</elementReference></value>
+        </inputAssignments>
+        <inputAssignments>
+            <field>Description</field>
+            <value><stringValue>Schedule and confirm kickoff call agenda with all stakeholders.</stringValue></value>
+        </inputAssignments>
+        <object>Task</object>
+        <storeOutputAutomatically>true</storeOutputAutomatically>
+    </recordCreates>
+
+    <!-- ═══ FAULT HANDLER ════════════════════════════════════════════════════ -->
+    <!--
+        Best practice: always handle fault paths on DML elements.
+        Here we create a Task on the owner to notify them of the failure
+        rather than silently swallowing the error or crashing the save.
+        In production: use a Custom Notification or Platform Event to alert ops.
+    -->
+    <recordCreates>
+        <name>Log_Error</name>
+        <label>Log Flow Error</label>
+        <locationX>296</locationX>
+        <locationY>240</locationY>
+        <inputAssignments>
+            <field>Subject</field>
+            <value><stringValue>FLOW ERROR: Opportunity Won Tasks failed</stringValue></value>
+        </inputAssignments>
+        <inputAssignments>
+            <field>Status</field>
+            <value><stringValue>Not Started</stringValue></value>
+        </inputAssignments>
+        <inputAssignments>
+            <field>Priority</field>
+            <value><stringValue>High</stringValue></value>
+        </inputAssignments>
+        <inputAssignments>
+            <field>WhatId</field>
+            <value><elementReference>$Record.Id</elementReference></value>
+        </inputAssignments>
+        <inputAssignments>
+            <field>OwnerId</field>
+            <value><elementReference>$Record.OwnerId</elementReference></value>
+        </inputAssignments>
+        <inputAssignments>
+            <field>Description</field>
+            <value><elementReference>$Flow.FaultMessage</elementReference></value>
+        </inputAssignments>
+        <object>Task</object>
+        <storeOutputAutomatically>true</storeOutputAutomatically>
+    </recordCreates>
+
+</Flow>
