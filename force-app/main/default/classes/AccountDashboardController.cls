@@ -71,6 +71,59 @@ public with sharing class AccountDashboardController {
         return result;
     }
 
+    /**
+     * @description Returns aggregate Opportunity metrics filtered by stage and
+     *              minimum amount. Called imperatively by opportunityMetricsTile
+     *              when it receives an LMS filter message.
+     *
+     *              cacheable=false is NOT used here — this method reads data only
+     *              (no DML), but the result must NOT be cached because the filter
+     *              parameters change dynamically via LMS messages. Using cacheable=true
+     *              with dynamic parameters would serve stale cached results.
+     *
+     *              In production, cache-busting can be achieved by:
+     *                1. Using cacheable=false + imperative call (this approach)
+     *                2. Using cacheable=true + refreshApex() after each filter change
+     *              Option 1 is simpler when the call timing is controlled by events.
+     *
+     * @param accountId    Account record Id.
+     * @param stageFilter  Stage picklist value ('All' = no stage filter).
+     * @param minAmount    Minimum Amount filter (0 = no lower bound).
+     * @return             MetricsWrapper with aggregated counts and amounts.
+     */
+    @AuraEnabled
+    public static MetricsWrapper getOpportunityMetrics(
+            Id accountId, String stageFilter, Decimal minAmount) {
+
+        if (accountId == null) return new MetricsWrapper();
+
+        String soql = 'SELECT COUNT(Id) openCount, SUM(Amount) totalPipeline, '
+                    + 'AVG(Discount_Percent__c) avgDiscount, '
+                    + 'SUM(Final_Price__c) discountedPipeline '
+                    + 'FROM Opportunity '
+                    + 'WHERE AccountId = :accountId '
+                    + 'AND IsClosed = false ';
+
+        if (String.isNotBlank(stageFilter) && stageFilter != 'All') {
+            soql += 'AND StageName = :stageFilter ';
+        }
+        if (minAmount != null && minAmount > 0) {
+            soql += 'AND Amount >= :minAmount ';
+        }
+        soql += 'WITH SECURITY_ENFORCED';
+
+        List<AggregateResult> results = Database.query(soql);
+        if (results.isEmpty()) return new MetricsWrapper();
+
+        AggregateResult ar = results[0];
+        MetricsWrapper mw  = new MetricsWrapper();
+        mw.openCount             = (Integer) ar.get('openCount');
+        mw.totalPipeline         = (Decimal) ar.get('totalPipeline')         ?? 0;
+        mw.avgDiscount           = (Decimal) ar.get('avgDiscount')           ?? 0;
+        mw.discountedPipeline    = (Decimal) ar.get('discountedPipeline')    ?? 0;
+        return mw;
+    }
+
     // ─── Inner wrapper ────────────────────────────────────────────────────────────
 
     /**
@@ -78,6 +131,13 @@ public with sharing class AccountDashboardController {
      *              All properties are public and primitives — safe for LWC serialisation.
      *              Dates and Decimals are serialised to String and Number respectively.
      */
+    public class MetricsWrapper {
+        @AuraEnabled public Integer openCount          = 0;
+        @AuraEnabled public Decimal totalPipeline      = 0;
+        @AuraEnabled public Decimal avgDiscount        = 0;
+        @AuraEnabled public Decimal discountedPipeline = 0;
+    }
+
     public class OpportunityWrapper {
         @AuraEnabled public String  id;
         @AuraEnabled public String  name;
