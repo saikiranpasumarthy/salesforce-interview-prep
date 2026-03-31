@@ -1,0 +1,58 @@
+/*
+ * Shadow DOM scoping applies here — these selectors match ONLY elements
+ * inside c-opportunity-list's shadow root.
+ *
+ * .opp-item defined here is completely isolated from any parent component
+ * that might also define .opp-item. The browser ShadowRoot enforces this.
+ */
+
+:host {
+    display: block;
+}
+
+.opportunity-list {
+    max-height: 480px;
+    overflow-y: auto;
+}
+
+.opp-item {
+    border-bottom: 1px solid var(--lwc-colorBorder, #dddbda);
+    cursor: pointer;
+    transition: background-color 0.15s ease;
+}
+
+.opp-item:hover {
+    background-color: var(--lwc-colorBackgroundRowHover, #f3f3f3);
+}
+
+.opp-name {
+    font-weight: 600;
+}
+
+.stage-pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.stage-pill {
+    display: inline-block;
+    padding: 2px 10px;
+    border-radius: 12px;
+    border: 1px solid var(--lwc-colorBorder, #dddbda);
+    cursor: pointer;
+    font-size: var(--lwc-fontSize1, 11px);
+    background-color: var(--lwc-colorBackground, #fff);
+    transition: background-color 0.15s, color 0.15s;
+}
+
+.stage-pill--active {
+    background-color: var(--lwc-brandColorPrimary, #0176d3);
+    color: #fff;
+    border-color: var(--lwc-brandColorPrimary, #0176d3);
+}
+
+.empty-state {
+    flex-direction: column;
+    opacity: 0.6;
+}

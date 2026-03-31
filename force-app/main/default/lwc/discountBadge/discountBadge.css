@@ -1,0 +1,60 @@
+/*
+ * discountBadge.css
+ *
+ * Leaf component styling — no child selectors needed.
+ * All CSS here is scoped to the discountBadge shadow root by the browser.
+ *
+ * CSS Custom Property fallback pattern (var(--token, fallback)):
+ *   The first argument is the design token (set by the SLDS theme at page level).
+ *   The second argument is the hardcoded fallback for orgs not using SLDS tokens.
+ *   This ensures the component renders correctly in sandbox orgs, Experience Cloud,
+ *   and embedding contexts where design tokens may not be loaded.
+ */
+
+:host {
+    display: inline-block;
+}
+
+.discount-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: var(--lwc-fontSize1, 11px);
+    font-weight: 600;
+    white-space: nowrap;
+    cursor: default;
+    transition: transform 0.1s ease;
+}
+
+.discount-badge:hover {
+    transform: scale(1.05);
+}
+
+/* No discount */
+.discount-badge--none {
+    background-color: var(--lwc-colorBackground, #f3f3f3);
+    color: var(--lwc-colorTextWeak, #747474);
+    border: 1px solid var(--lwc-colorBorder, #dddbda);
+}
+
+/* 1%–9% off (TieredDiscountStrategy low tier) */
+.discount-badge--low {
+    background-color: #e8f4fd;
+    color: #014486;
+    border: 1px solid #c9e3f8;
+}
+
+/* 10%–14% off (TieredDiscountStrategy medium tier / LoyaltyDiscountStrategy mid) */
+.discount-badge--medium {
+    background-color: #fff3e0;
+    color: #663c00;
+    border: 1px solid #ffe0b2;
+}
+
+/* 15%+ off (high tier / FlatRateDiscountStrategy partner rate) */
+.discount-badge--high {
+    background-color: #fce4ec;
+    color: #880e4f;
+    border: 1px solid #f8bbd0;
+}

@@ -1,0 +1,20 @@
+<!--
+    discountBadge — Pure presentational (leaf) component demonstrating:
+      • @api props only — no wire, no events, no lifecycle side-effects
+      • Conditional CSS class binding via getter returning a computed class string
+      • Template expression formatting without imperative DOM manipulation
+      • Accessibility: role="status" for screen-reader announcements
+
+    A leaf component has no children and emits no events.
+    It is the simplest LWC unit — pure input (@api) → output (rendered HTML).
+    Testing leaf components is straightforward: set @api props, assert rendered output.
+-->
+<template>
+    <span
+        class={badgeClass}
+        role="status"
+        aria-label={ariaLabel}
+        title={tooltipText}>
+        {badgeLabel}
+    </span>
+</template>

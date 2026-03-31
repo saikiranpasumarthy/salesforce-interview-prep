@@ -1,0 +1,101 @@
+<!--
+    accountSummaryCard — Parent component demonstrating:
+      • All four lifecycle hooks (constructor → connectedCallback → renderedCallback → disconnectedCallback)
+      • @wire(getRecord) with UI API — declarative, auto-refreshes on @api change
+      • lwc:if / lwc:elseif / lwc:else (Winter '23+ — replaces deprecated if:true/if:false)
+      • Conditional child component mounting (<c-opportunity-list> only rendered when showOpportunities = true)
+      • Custom event listening from child (onopportunityselected)
+-->
+<template>
+    <lightning-card icon-name="standard:account" class="account-summary-card">
+        <span slot="title">{cardTitle}</span>
+
+        <!-- ── Loading state ─────────────────────────────────────────────── -->
+        <template lwc:if={isLoading}>
+            <div class="slds-p-around_medium slds-align_absolute-center">
+                <lightning-spinner
+                    alternative-text="Loading account…"
+                    size="medium">
+                </lightning-spinner>
+            </div>
+        </template>
+
+        <!-- ── Error state ───────────────────────────────────────────────── -->
+        <template lwc:elseif={hasError}>
+            <div class="slds-p-around_medium">
+                <div class="slds-notify slds-notify_alert slds-theme_error" role="alert">
+                    <lightning-icon
+                        icon-name="utility:error"
+                        alternative-text="Error"
+                        size="small"
+                        class="slds-m-right_x-small">
+                    </lightning-icon>
+                    <span>{errorMessage}</span>
+                </div>
+            </div>
+        </template>
+
+        <!-- ── Data state ────────────────────────────────────────────────── -->
+        <template lwc:else>
+            <div class="slds-p-around_medium account-card">
+
+                <!-- Account header row -->
+                <div class="slds-grid slds-gutters slds-grid_vertical-align-center">
+                    <div class="slds-col">
+                        <h2 class="slds-text-heading_small">{accountName}</h2>
+                        <p class="slds-text-body_small slds-text-color_weak">{accountType}</p>
+                    </div>
+                    <div class="slds-col slds-no-flex">
+                        <span class={ratingBadgeClass}>{accountRating}</span>
+                    </div>
+                </div>
+
+                <!-- Revenue display -->
+                <div class="slds-m-top_medium revenue-block">
+                    <p class="revenue-label">Annual Revenue</p>
+                    <p class="slds-text-heading_medium">{formattedRevenue}</p>
+                </div>
+
+                <!-- Opportunity count pill -->
+                <div class="slds-m-top_small">
+                    <span class="slds-badge">{opportunityCountLabel}</span>
+                </div>
+
+                <!-- Toggle opportunities button -->
+                <div class="slds-m-top_medium">
+                    <lightning-button
+                        label={toggleButtonLabel}
+                        icon-name={toggleButtonIcon}
+                        onclick={handleToggleOpportunities}>
+                    </lightning-button>
+                </div>
+
+                <!--
+                    Child component mounted/unmounted based on showOpportunities.
+                    When lwc:if becomes false, the component is DESTROYED — disconnectedCallback fires.
+                    When lwc:if becomes true, the component is CREATED — full lifecycle restarts.
+                    This is different from CSS display:none, which keeps the component alive.
+                -->
+                <template lwc:if={showOpportunities}>
+                    <div class="slds-m-top_medium">
+                        <c-opportunity-list
+                            account-id={accountId}
+                            onopportunityselected={handleOpportunitySelected}>
+                        </c-opportunity-list>
+                    </div>
+                </template>
+
+                <!-- Selected opportunity feedback -->
+                <template lwc:if={selectedOpportunityId}>
+                    <div class="slds-m-top_small slds-notify slds-notify_toast slds-theme_info" role="status">
+                        <p class="slds-text-body_small">
+                            Selected Opportunity ID: <strong>{selectedOpportunityId}</strong>
+                        </p>
+                    </div>
+                </template>
+
+            </div>
+        </template>
+
+    </lightning-card>
+</template>

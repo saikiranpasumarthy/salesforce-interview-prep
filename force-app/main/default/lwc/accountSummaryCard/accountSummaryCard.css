@@ -1,0 +1,49 @@
+/*
+ * accountSummaryCard.css
+ *
+ * Shadow DOM CSS scoping:
+ *   All selectors here match ONLY elements inside this component's shadow root.
+ *   .account-card here ≠ .account-card in any parent or sibling component.
+ *   Parent CSS cannot reach in; this CSS cannot leak out.
+ *   This is enforced by the browser's ShadowRoot — not just a naming convention.
+ *
+ * :host selector:
+ *   Matches the component's custom element itself (<c-account-summary-card> tag).
+ *   Use :host to control how the component participates in its parent's layout.
+ *   LWC components default to inline display — override here for block layout.
+ *
+ * CSS Custom Properties (design tokens):
+ *   --lwc-* variables are set at the page level and CAN cross shadow boundaries.
+ *   They are the intentional "holes" in Shadow DOM CSS encapsulation — use them
+ *   for theming, not for arbitrary style overrides.
+ */
+
+:host {
+    /* Make the component a block-level element so it takes full available width */
+    display: block;
+}
+
+.account-card {
+    background-color: var(--lwc-colorBackgroundAlt, #f3f3f3);
+    border-radius: var(--lwc-borderRadiusMedium, 4px);
+    border-left: 4px solid var(--lwc-brandColorPrimary, #0176d3);
+    transition: box-shadow 0.2s ease;
+}
+
+.account-card:hover {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+}
+
+.revenue-block {
+    padding: 8px 0;
+    border-top: 1px solid var(--lwc-colorBorder, #dddbda);
+    border-bottom: 1px solid var(--lwc-colorBorder, #dddbda);
+}
+
+.revenue-label {
+    font-size: var(--lwc-fontSize1, 11px);
+    color: var(--lwc-colorTextWeak, #747474);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 2px;
+}
