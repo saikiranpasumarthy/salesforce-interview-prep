@@ -1,0 +1,93 @@
+<!--
+    opportunityDetailPage — NavigationMixin demonstration:
+      • Navigate to standard record page (Account, Opportunity)
+      • Navigate to a named page (Home, Chatter, etc.)
+      • Navigate to a custom object tab
+      • Navigate to a web URL (external)
+      • Navigate to a new record modal (defaultFieldValues)
+      • Read URL state via CurrentPageReference @wire
+      • Write URL state (pageReference.state) for bookmarkable filters
+
+    PageReference types covered:
+      standard__recordPage  — view/edit/clone a specific record
+      standard__objectPage  — list/new record for an object
+      standard__namedPage   — named pages (Home, Chatter, etc.)
+      standard__webPage     — external URL
+-->
+<template>
+    <lightning-card icon-name="standard:opportunity" title="Opportunity Detail Navigator">
+        <div class="slds-p-around_medium">
+
+            <!-- Current page reference display -->
+            <div class="slds-m-bottom_medium page-ref-display">
+                <p class="slds-text-title slds-m-bottom_x-small">Current Page Reference</p>
+                <pre class="slds-text-body_small page-ref-json">{currentPageRefJson}</pre>
+            </div>
+
+            <!-- URL state from CurrentPageReference -->
+            <template lwc:if={urlState.stage}>
+                <div class="slds-notify slds-notify_toast slds-theme_info slds-m-bottom_medium" role="status">
+                    <p class="slds-text-body_small">
+                        URL State — Stage filter: <strong>{urlState.stage}</strong>
+                    </p>
+                </div>
+            </template>
+
+            <!-- Navigation action buttons -->
+            <div class="slds-grid slds-gutters slds-wrap">
+
+                <div class="slds-col slds-size_1-of-2 slds-p-bottom_small">
+                    <lightning-button
+                        label="View Account Record"
+                        icon-name="utility:account"
+                        variant="brand"
+                        onclick={navigateToAccount}>
+                    </lightning-button>
+                </div>
+
+                <div class="slds-col slds-size_1-of-2 slds-p-bottom_small">
+                    <lightning-button
+                        label="New Opportunity"
+                        icon-name="utility:add"
+                        variant="success"
+                        onclick={navigateToNewOpportunity}>
+                    </lightning-button>
+                </div>
+
+                <div class="slds-col slds-size_1-of-2 slds-p-bottom_small">
+                    <lightning-button
+                        label="Opportunity List"
+                        icon-name="utility:list"
+                        onclick={navigateToOpportunityList}>
+                    </lightning-button>
+                </div>
+
+                <div class="slds-col slds-size_1-of-2 slds-p-bottom_small">
+                    <lightning-button
+                        label="Home Page"
+                        icon-name="utility:home"
+                        onclick={navigateToHome}>
+                    </lightning-button>
+                </div>
+
+                <div class="slds-col slds-size_1-of-2 slds-p-bottom_small">
+                    <lightning-button
+                        label="Salesforce Help"
+                        icon-name="utility:new_window"
+                        onclick={navigateToExternalUrl}>
+                    </lightning-button>
+                </div>
+
+                <div class="slds-col slds-size_1-of-2 slds-p-bottom_small">
+                    <lightning-button
+                        label="Set URL State"
+                        icon-name="utility:link"
+                        onclick={setUrlState}>
+                    </lightning-button>
+                </div>
+
+            </div>
+
+        </div>
+    </lightning-card>
+</template>

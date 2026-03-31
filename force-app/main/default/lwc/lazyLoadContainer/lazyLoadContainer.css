@@ -1,0 +1,57 @@
+:host {
+    display: block;
+}
+
+.lazy-host {
+    min-height: 40px;
+}
+
+/* ── Skeleton shimmer ─────────────────────────────────────────────────────── */
+
+.skeleton-wrapper {
+    padding: 12px;
+}
+
+.skeleton {
+    background: linear-gradient(
+        90deg,
+        var(--lwc-colorBackgroundAlt, #f3f3f3) 25%,
+        var(--lwc-colorBackground, #e5e5e5) 50%,
+        var(--lwc-colorBackgroundAlt, #f3f3f3) 75%
+    );
+    background-size: 200% 100%;
+    border-radius: 4px;
+    animation: shimmer 1.4s infinite;
+}
+
+.skeleton--title {
+    height: 18px;
+    width: 60%;
+    margin-bottom: 10px;
+}
+
+.skeleton--line {
+    height: 12px;
+    width: 90%;
+    margin-bottom: 8px;
+}
+
+.skeleton--line-short {
+    width: 50%;
+}
+
+@keyframes shimmer {
+    0%   { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}
+
+/* ── Content wrapper ─────────────────────────────────────────────────────── */
+
+.content-wrapper {
+    animation: fadeIn 0.2s ease-in;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+}

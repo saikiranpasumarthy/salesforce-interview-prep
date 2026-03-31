@@ -18,7 +18,7 @@ Senior Salesforce Developer | 9+ Years | Architect-Track Preparation
 | 7 | Apex Testing Deep Dive, TestDataFactory, Mocking & Stubs | Phase 1 | ✅ Done | [Day 7 →](docs/day-07.md) |
 | 8 | LWC Architecture, Component Lifecycle, Shadow DOM & Rendering | Phase 1 | ✅ Done | [Day 8 →](docs/day-08.md) |
 | 9 | LWC Communication Patterns, Wire Adapters, Custom Events vs PubSub | Phase 1 | ✅ Done | [Day 9 →](docs/day-09.md) |
-| 10 | LWC Advanced, Navigation & Page Reference, LWC Performance | Phase 1 | ⬜ Pending | — |
+| 10 | LWC Advanced, Navigation & Page Reference, LWC Performance | Phase 1 | ✅ Done | [Day 10 →](docs/day-10.md) |
 | 11 | LWC Testing (Jest), LWC with Apex, LWC Accessibility | Phase 1 | ⬜ Pending | — |
 | 12 | Flows: Record-Triggered & Auto, Flow Best Practices, Flow vs Apex | Phase 1 | ⬜ Pending | — |
 | 13 | Flows: Screen Flows & Subflows, Dynamic Forms, Flow Error Handling | Phase 1 | ⬜ Pending | — |
