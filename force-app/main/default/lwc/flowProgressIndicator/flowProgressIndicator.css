@@ -1,0 +1,111 @@
+:host {
+    display: block;
+    padding: 12px 0 20px;
+}
+
+/* ── Screen-reader only ──────────────────────────────────────────────────── */
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+/* ── Progress bar row ────────────────────────────────────────────────────── */
+.progress-bar {
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    width: 100%;
+    padding: 0 16px;
+    box-sizing: border-box;
+}
+
+/* ── Step container ──────────────────────────────────────────────────────── */
+.step-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+    flex: 1;
+    min-width: 60px;
+}
+
+/* ── Step circle ─────────────────────────────────────────────────────────── */
+.step-circle {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    font-weight: 700;
+    position: relative;
+    z-index: 1;
+    transition: background-color 0.2s ease, border-color 0.2s ease;
+    flex-shrink: 0;
+}
+
+.step-circle--upcoming {
+    background-color: var(--lwc-colorBackground, #f3f3f3);
+    border: 2px solid var(--lwc-colorBorder, #dddbda);
+    color: var(--lwc-colorTextWeak, #706e6b);
+}
+
+.step-circle--active {
+    background-color: var(--lwc-brandColorPrimary, #0176d3);
+    border: 2px solid var(--lwc-brandColorPrimary, #0176d3);
+    color: #ffffff;
+    box-shadow: 0 0 0 4px rgba(1, 118, 211, 0.2);
+}
+
+.step-circle--completed {
+    background-color: var(--lwc-colorBackgroundSuccess, #2e844a);
+    border: 2px solid var(--lwc-colorBackgroundSuccess, #2e844a);
+    color: #ffffff;
+}
+
+.step-number {
+    line-height: 1;
+}
+
+/* ── Connector line between circles ─────────────────────────────────────── */
+.connector {
+    position: absolute;
+    top: 16px;  /* vertically centred on the 32px circle */
+    left: calc(50% + 16px);
+    right: calc(-50% + 16px);
+    height: 2px;
+    background-color: var(--lwc-colorBorder, #dddbda);
+    z-index: 0;
+}
+
+.connector--completed {
+    background-color: var(--lwc-colorBackgroundSuccess, #2e844a);
+}
+
+/* ── Step label ──────────────────────────────────────────────────────────── */
+.step-label {
+    margin-top: 6px;
+    font-size: 11px;
+    text-align: center;
+    white-space: nowrap;
+    color: var(--lwc-colorTextWeak, #706e6b);
+    letter-spacing: 0.01em;
+}
+
+.step-label--active {
+    color: var(--lwc-brandColorPrimary, #0176d3);
+    font-weight: 700;
+}
+
+.step-label--completed {
+    color: var(--lwc-colorBackgroundSuccess, #2e844a);
+    font-weight: 500;
+}
