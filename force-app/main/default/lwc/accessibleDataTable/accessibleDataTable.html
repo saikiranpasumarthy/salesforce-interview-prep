@@ -1,0 +1,122 @@
+<!--
+    accessibleDataTable — Production-quality accessible data grid demonstrating:
+
+    ARIA grid pattern (WCAG 2.1 / APG Grid Pattern):
+      • role="grid"        — container; announces as interactive grid to screen readers
+      • role="row"         — each table row
+      • role="columnheader"— sortable header cells; aria-sort cycles none→asc→desc
+      • role="gridcell"    — data cells; receives focus via roving tabindex
+      • aria-rowcount      — total row count (including header) on the grid element
+      • aria-colcount      — column count on the grid element
+      • aria-rowindex      — 1-based row position on each row (for virtual/paginated grids)
+      • aria-colindex      — 1-based column position on each cell
+
+    Roving tabindex pattern:
+      Only ONE element in the grid has tabindex="0" at any time.
+      All other focusable cells have tabindex="-1".
+      Arrow keys move the "roving" tabindex to the next cell.
+      This ensures Tab key exits the grid in one keystroke (WCAG 2.1.1).
+
+    aria-live region:
+      Announces sort changes to screen readers without moving focus.
+      role="status" + aria-live="polite" — announcement queued after current utterance.
+      aria-atomic="true" — the full string is announced (not just changed chars).
+
+    Keyboard interactions (APG Grid Pattern):
+      ArrowRight  — move focus one cell right (wraps to next row)
+      ArrowLeft   — move focus one cell left  (wraps to previous row)
+      ArrowDown   — move focus one row down   (stays in same column)
+      ArrowUp     — move focus one row up     (stays in same column)
+      Enter/Space — activate sort on a column header cell
+      Home        — move to first cell in current row
+      End         — move to last cell in current row
+-->
+<template>
+    <!-- Screen-reader announcement region for sort changes -->
+    <div
+        class="sr-only"
+        role="status"
+        aria-live="polite"
+        aria-atomic="true"
+        data-id="announce">
+        {announcement}
+    </div>
+
+    <div class="table-container">
+        <div
+            role="grid"
+            class="a11y-grid"
+            aria-label={gridLabel}
+            aria-rowcount={ariaRowCount}
+            aria-colcount={columnCount}
+            onkeydown={handleKeyDown}>
+
+            <!-- Column header row -->
+            <div role="row" aria-rowindex="1" class="grid-header-row">
+                <template for:each={columns} for:item="col">
+                    <div
+                        key={col.fieldName}
+                        role="columnheader"
+                        class={col.headerClass}
+                        aria-sort={col.ariaSortValue}
+                        aria-colindex={col.colIndex}
+                        tabindex={col.headerTabIndex}
+                        data-row="0"
+                        data-col={col.colZeroIndex}
+                        onclick={handleHeaderClick}
+                        onkeydown={handleHeaderKeyDown}>
+
+                        <span class="col-label">{col.label}</span>
+
+                        <template lwc:if={col.sortable}>
+                            <lightning-icon
+                                icon-name={col.sortIconName}
+                                size="x-small"
+                                class="sort-icon"
+                                aria-hidden="true">
+                            </lightning-icon>
+                        </template>
+                    </div>
+                </template>
+            </div>
+
+            <!-- Data rows -->
+            <template for:each={rows} for:item="row">
+                <div
+                    key={row._key}
+                    role="row"
+                    class={row.rowClass}
+                    aria-rowindex={row.ariaRowIndex}>
+
+                    <template for:each={row.cells} for:item="cell">
+                        <div
+                            key={cell.key}
+                            role="gridcell"
+                            class="grid-cell"
+                            tabindex={cell.tabIndex}
+                            aria-colindex={cell.colIndex}
+                            data-row={row.rowZeroIndex}
+                            data-col={cell.colZeroIndex}>
+                            {cell.value}
+                        </div>
+                    </template>
+                </div>
+            </template>
+
+            <!-- Empty state -->
+            <template lwc:if={isEmpty}>
+                <div role="row" aria-rowindex="2" class="empty-row">
+                    <div
+                        role="gridcell"
+                        class="empty-cell"
+                        aria-colindex="1"
+                        tabindex="0"
+                        data-row="1"
+                        data-col="0">
+                        {emptyMessage}
+                    </div>
+                </div>
+            </template>
+        </div>
+    </div>
+</template>
