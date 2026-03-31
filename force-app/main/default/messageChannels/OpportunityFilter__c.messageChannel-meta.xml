@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<LightningMessageChannel xmlns="http://soap.sforce.com/2006/04/metadata">
+    <masterLabel>Opportunity Filter</masterLabel>
+    <isExposed>true</isExposed>
+    <description>
+        Message channel for broadcasting Opportunity filter criteria across unrelated
+        LWC components on the same Lightning page. Published by opportunityFilterBar;
+        subscribed by opportunityMetricsTile and opportunityList.
+
+        LMS replaces the legacy pubsub pattern (fireEvent/handleEvent) and Aura
+        application events. It works across:
+          - Components with no parent-child relationship
+          - Components in different regions of a Lightning page
+          - LWC and Aura components on the same page
+          - Standard and custom Lightning pages
+    </description>
+    <lightningMessageFields>
+        <fieldName>stageFilter</fieldName>
+        <description>Opportunity Stage picklist value to filter on. 'All' means no stage filter.</description>
+    </lightningMessageFields>
+    <lightningMessageFields>
+        <fieldName>minAmount</fieldName>
+        <description>Minimum Opportunity Amount filter. Null means no lower bound.</description>
+    </lightningMessageFields>
+    <lightningMessageFields>
+        <fieldName>accountId</fieldName>
+        <description>Account Id context — subscribers use this to scope their queries.</description>
+    </lightningMessageFields>
+</LightningMessageChannel>

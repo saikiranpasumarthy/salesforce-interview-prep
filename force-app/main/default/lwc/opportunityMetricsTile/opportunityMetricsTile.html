@@ -1,0 +1,79 @@
+<!--
+    opportunityMetricsTile — LMS subscriber + imperative Apex demonstrating:
+      • subscribe() / unsubscribe() lifecycle pair
+      • Imperative Apex call (cacheable=false) triggered by LMS message
+      • refreshApex() for invalidating @wire cache after DML
+      • Error handling for imperative calls (try/catch + toast notification)
+      • SCOPE_APPLICATION vs SCOPE_DEFAULT for LMS subscription scope
+-->
+<template>
+    <lightning-card icon-name="standard:metrics" title="Opportunity Metrics">
+        <div class="slds-p-around_medium">
+
+            <!-- Loading spinner for imperative Apex calls -->
+            <template lwc:if={isLoading}>
+                <div class="slds-align_absolute-center slds-p-vertical_medium">
+                    <lightning-spinner size="small" alternative-text="Calculating metrics…">
+                    </lightning-spinner>
+                </div>
+            </template>
+
+            <template lwc:else>
+
+                <!-- Active filter badge -->
+                <template lwc:if={hasActiveFilter}>
+                    <div class="slds-m-bottom_small">
+                        <span class="slds-badge slds-badge_lightest filter-badge">
+                            <lightning-icon icon-name="utility:filter" size="xx-small"
+                                class="slds-m-right_xx-small">
+                            </lightning-icon>
+                            {activeFilterLabel}
+                        </span>
+                    </div>
+                </template>
+
+                <!-- Metrics grid -->
+                <div class="slds-grid slds-gutters slds-wrap metrics-grid">
+
+                    <div class="slds-col slds-size_1-of-2 slds-p-bottom_small">
+                        <div class="metric-tile">
+                            <p class="metric-label">Open Opportunities</p>
+                            <p class="metric-value slds-text-heading_medium">{metrics.openCount}</p>
+                        </div>
+                    </div>
+
+                    <div class="slds-col slds-size_1-of-2 slds-p-bottom_small">
+                        <div class="metric-tile">
+                            <p class="metric-label">Total Pipeline</p>
+                            <p class="metric-value slds-text-heading_medium">{formattedPipeline}</p>
+                        </div>
+                    </div>
+
+                    <div class="slds-col slds-size_1-of-2 slds-p-bottom_small">
+                        <div class="metric-tile">
+                            <p class="metric-label">Avg Discount</p>
+                            <p class="metric-value slds-text-heading_medium">{formattedAvgDiscount}</p>
+                        </div>
+                    </div>
+
+                    <div class="slds-col slds-size_1-of-2 slds-p-bottom_small">
+                        <div class="metric-tile metric-tile--highlight">
+                            <p class="metric-label">Discounted Pipeline</p>
+                            <p class="metric-value slds-text-heading_medium">{formattedDiscountedPipeline}</p>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- Error state for imperative call -->
+                <template lwc:if={errorMessage}>
+                    <div class="slds-notify slds-notify_alert slds-theme_error slds-m-top_small" role="alert">
+                        {errorMessage}
+                    </div>
+                </template>
+
+            </template>
+
+        </div>
+    </lightning-card>
+</template>

@@ -1,0 +1,47 @@
+<!--
+    accountDashboard — Composition root demonstrating:
+      • All Day 8 + Day 9 components assembled on one page
+      • How LMS enables column-layout sibling communication without a shared bus
+      • @api getter/setter propagating recordId to all children
+      • refreshApex pattern comment (see JS)
+
+    Layout: left column = filter + summary | right column = metrics + opportunities
+    opportunityFilterBar and opportunityMetricsTile have NO parent-child relationship —
+    they communicate exclusively through the OpportunityFilter__c LMS channel.
+-->
+<template>
+    <div class="slds-grid slds-gutters dashboard-grid">
+
+        <!-- Left column: Filter bar + Account summary -->
+        <div class="slds-col slds-size_1-of-3 left-column">
+            <c-opportunity-filter-bar
+                account-id={accountId}>
+            </c-opportunity-filter-bar>
+
+            <div class="slds-m-top_medium">
+                <c-account-summary-card
+                    account-id={accountId}>
+                </c-account-summary-card>
+            </div>
+        </div>
+
+        <!-- Right column: Metrics tile + Opportunity list -->
+        <div class="slds-col slds-size_2-of-3 right-column">
+            <c-opportunity-metrics-tile
+                account-id={accountId}>
+            </c-opportunity-metrics-tile>
+
+            <div class="slds-m-top_medium">
+                <!--
+                    opportunityList subscribes to OpportunityFilter__c LMS in Day 9.
+                    The filter bar (left column) publishes; the list (right column) subscribes.
+                    No shared parent wires them — LMS is the communication backbone.
+                -->
+                <c-opportunity-list
+                    account-id={accountId}>
+                </c-opportunity-list>
+            </div>
+        </div>
+
+    </div>
+</template>

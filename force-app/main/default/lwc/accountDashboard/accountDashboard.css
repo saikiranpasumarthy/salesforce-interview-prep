@@ -1,0 +1,11 @@
+:host {
+    display: block;
+}
+
+.dashboard-grid {
+    min-height: 600px;
+}
+
+.left-column {
+    max-width: 340px;
+}

@@ -1,0 +1,68 @@
+<!--
+    opportunityFilterBar — LMS publisher component demonstrating:
+      • publish() via Lightning Message Service
+      • wire(MessageContext) — required handle for LMS publish/subscribe
+      • Imperative Apex call (cacheable=false) via refreshApex equivalent pattern
+      • Data binding with getter/setter pattern for @api prop change detection
+
+    This component has NO parent-child relationship with opportunityMetricsTile
+    or the revised opportunityList. They communicate exclusively through LMS —
+    demonstrating cross-component communication without a shared ancestor.
+-->
+<template>
+    <lightning-card icon-name="utility:filter" title="Opportunity Filters">
+        <div class="slds-p-around_medium">
+
+            <!-- Stage filter picklist -->
+            <lightning-combobox
+                name="stage"
+                label="Stage"
+                value={selectedStage}
+                options={stageOptions}
+                onchange={handleStageChange}>
+            </lightning-combobox>
+
+            <!-- Minimum amount slider -->
+            <div class="slds-m-top_medium">
+                <lightning-slider
+                    label={amountSliderLabel}
+                    min="0"
+                    max="500000"
+                    step="10000"
+                    value={minAmount}
+                    onchange={handleAmountChange}>
+                </lightning-slider>
+            </div>
+
+            <!-- Action row -->
+            <div class="slds-m-top_medium slds-grid slds-gutters">
+                <div class="slds-col">
+                    <lightning-button
+                        label="Apply Filters"
+                        variant="brand"
+                        icon-name="utility:check"
+                        onclick={handleApplyFilters}>
+                    </lightning-button>
+                </div>
+                <div class="slds-col slds-no-flex">
+                    <lightning-button
+                        label="Reset"
+                        variant="neutral"
+                        icon-name="utility:refresh"
+                        onclick={handleReset}>
+                    </lightning-button>
+                </div>
+            </div>
+
+            <!-- Last published state indicator -->
+            <template lwc:if={lastPublished}>
+                <div class="slds-m-top_small">
+                    <p class="slds-text-body_small slds-text-color_weak">
+                        Filters applied: {lastPublished}
+                    </p>
+                </div>
+            </template>
+
+        </div>
+    </lightning-card>
+</template>
