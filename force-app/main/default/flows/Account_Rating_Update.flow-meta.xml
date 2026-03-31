@@ -1,0 +1,164 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    Account_Rating_Update — Record-Triggered Flow (Before Save)
+
+    PURPOSE
+    ═══════
+    Automatically set Account.Rating to Hot / Warm / Cold based on
+    AnnualRevenue whenever the field is created or changed.
+
+    WHY FLOW (NOT APEX TRIGGER)?
+    ════════════════════════════
+    • No complex logic: simple threshold-based field assignment
+    • Configurable by admins without deployment
+    • Before-save flows run in the same transaction frame as the save —
+      no DML consumed (field update is applied in memory, same as formula)
+    • Salesforce Best Practice: declarative first; Apex when logic
+      requires queries, complex branching, or platform limits management
+
+    ARCHITECTURE DECISION: BEFORE SAVE vs AFTER SAVE
+    ═════════════════════════════════════════════════
+    Before Save  — read/write $Record fields; NO DML allowed; fastest (no extra DML)
+    After Save   — access $Record.Id (record is committed); DML allowed for related records
+    This flow uses Before Save because we only need to modify the record itself.
+
+    ENTRY CONDITIONS (isChanged filter)
+    ════════════════════════════════════
+    filterLogic: IsChanged on AnnualRevenue prevents the flow from firing
+    on unrelated updates (e.g., Description change). Interview concept:
+    without entry conditions a Before-Save flow fires on EVERY update — even
+    a one-character Description edit — wasting CPU and risking governor limits.
+
+    DECISIONS
+    ═════════
+    Hot:  AnnualRevenue >= 1,000,000
+    Warm: AnnualRevenue >= 500,000 (and < 1,000,000 — evaluated after Hot fails)
+    Cold: default outcome (all other values, including null)
+-->
+<Flow xmlns="http://soap.sforce.com/2006/04/metadata">
+    <apiVersion>62.0</apiVersion>
+    <description>Sets Account Rating (Hot/Warm/Cold) based on Annual Revenue before record save. Fires only when AnnualRevenue is created or changed.</description>
+    <environments>Default</environments>
+    <interviewLabel>Account Rating Update {!$Flow.CurrentDateTime}</interviewLabel>
+    <label>Account Rating Update</label>
+    <processMetadataValues>
+        <name>BuilderType</name>
+        <value><stringValue>LightningFlowBuilder</stringValue></value>
+    </processMetadataValues>
+    <processMetadataValues>
+        <name>CanvasMode</name>
+        <value><stringValue>AUTO_LAYOUT_CANVAS</stringValue></value>
+    </processMetadataValues>
+    <processType>AutoLaunchedFlow</processType>
+    <status>Active</status>
+
+    <!-- ═══ START ════════════════════════════════════════════════════════════ -->
+    <start>
+        <locationX>56</locationX>
+        <locationY>0</locationY>
+        <!-- Entry condition: only fire when AnnualRevenue has changed -->
+        <filterLogic>and</filterLogic>
+        <filters>
+            <field>AnnualRevenue</field>
+            <operator>IsChanged</operator>
+            <value><booleanValue>true</booleanValue></value>
+        </filters>
+        <object>Account</object>
+        <recordTriggerType>CreateAndUpdate</recordTriggerType>
+        <triggerType>RecordBeforeSave</triggerType>
+        <connector>
+            <targetReference>Check_Revenue_Tier</targetReference>
+        </connector>
+    </start>
+
+    <!-- ═══ DECISION: revenue tier ══════════════════════════════════════════ -->
+    <!--
+        Decision node evaluates conditions top-to-bottom; first match wins.
+        Salesforce evaluates all outcomes regardless of order — the "default"
+        outcome catches everything the named outcomes didn't match.
+    -->
+    <decisions>
+        <name>Check_Revenue_Tier</name>
+        <label>Check Revenue Tier</label>
+        <locationX>176</locationX>
+        <locationY>120</locationY>
+        <defaultConnector>
+            <targetReference>Set_Rating_Cold</targetReference>
+        </defaultConnector>
+        <defaultConnectorLabel>Cold (default)</defaultConnectorLabel>
+
+        <!-- Hot: revenue >= $1,000,000 -->
+        <rules>
+            <name>Is_Hot</name>
+            <conditionLogic>and</conditionLogic>
+            <conditions>
+                <leftValueReference>$Record.AnnualRevenue</leftValueReference>
+                <operator>GreaterThanOrEqualTo</operator>
+                <rightValue><numberValue>1000000</numberValue></rightValue>
+            </conditions>
+            <connector>
+                <targetReference>Set_Rating_Hot</targetReference>
+            </connector>
+            <label>Revenue >= $1M (Hot)</label>
+        </rules>
+
+        <!-- Warm: revenue >= $500,000 (and < $1M — Hot already matched above) -->
+        <rules>
+            <name>Is_Warm</name>
+            <conditionLogic>and</conditionLogic>
+            <conditions>
+                <leftValueReference>$Record.AnnualRevenue</leftValueReference>
+                <operator>GreaterThanOrEqualTo</operator>
+                <rightValue><numberValue>500000</numberValue></rightValue>
+            </conditions>
+            <connector>
+                <targetReference>Set_Rating_Warm</targetReference>
+            </connector>
+            <label>Revenue >= $500K (Warm)</label>
+        </rules>
+    </decisions>
+
+    <!-- ═══ ASSIGNMENTS ═══════════════════════════════════════════════════════ -->
+    <!--
+        Before-save assignments write directly to $Record fields.
+        No DML is fired — the platform applies these changes to the record
+        in memory before the INSERT/UPDATE SQL executes.
+        This is faster and does not consume DML statements or row limits.
+    -->
+    <assignments>
+        <name>Set_Rating_Hot</name>
+        <label>Set Rating = Hot</label>
+        <locationX>56</locationX>
+        <locationY>240</locationY>
+        <assignmentItems>
+            <assignToReference>$Record.Rating</assignToReference>
+            <operator>Assign</operator>
+            <value><stringValue>Hot</stringValue></value>
+        </assignmentItems>
+    </assignments>
+
+    <assignments>
+        <name>Set_Rating_Warm</name>
+        <label>Set Rating = Warm</label>
+        <locationX>176</locationX>
+        <locationY>240</locationY>
+        <assignmentItems>
+            <assignToReference>$Record.Rating</assignToReference>
+            <operator>Assign</operator>
+            <value><stringValue>Warm</stringValue></value>
+        </assignmentItems>
+    </assignments>
+
+    <assignments>
+        <name>Set_Rating_Cold</name>
+        <label>Set Rating = Cold</label>
+        <locationX>296</locationX>
+        <locationY>240</locationY>
+        <assignmentItems>
+            <assignToReference>$Record.Rating</assignToReference>
+            <operator>Assign</operator>
+            <value><stringValue>Cold</stringValue></value>
+        </assignmentItems>
+    </assignments>
+
+</Flow>

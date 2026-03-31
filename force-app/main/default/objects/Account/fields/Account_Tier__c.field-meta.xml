@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Account_Tier__c</fullName>
+    <description>Engagement tier derived from Account Score: Bronze / Silver / Gold / Platinum. Set by Account_Score_Calculator auto-launched flow.</description>
+    <externalId>false</externalId>
+    <label>Account Tier</label>
+    <length>20</length>
+    <required>false</required>
+    <trackFeedHistory>false</trackFeedHistory>
+    <trackHistory>false</trackHistory>
+    <type>Text</type>
+    <unique>false</unique>
+</CustomField>
