@@ -1,0 +1,39 @@
+<!--
+    lazyLoadContainer — deferred / lazy rendering patterns:
+      • IntersectionObserver: render heavy child only when scrolled into view
+      • lwc:if guard: keeps child out of DOM until intentionally revealed
+      • Skeleton placeholder: improves perceived performance during lazy load
+      • Slot-based composition: parent passes any child component as slot content
+      • forceLoad @api: parent can imperatively bypass lazy behaviour
+
+    Key interview concept — why lazy loading matters in LWC:
+      LWC renders all lwc:if=true subtrees synchronously on connectedCallback.
+      Deferring expensive sub-trees until they are visible prevents unnecessary
+      Apex @wire calls and reduces initial Time-to-Interactive.
+
+    Pattern choices:
+      IntersectionObserver   ← preferred; fires when element enters viewport
+      setTimeout(0)          ← simple alternative; defers to next event-loop tick
+      importLazy / dynamic   ← not available in LWC (no dynamic import yet)
+-->
+<template>
+    <div class="lazy-host" lwc:ref="sentinel">
+
+        <!-- Skeleton shown while waiting for lazy render -->
+        <template lwc:if={isWaiting}>
+            <div class="skeleton-wrapper" aria-hidden="true">
+                <div class="skeleton skeleton--title"></div>
+                <div class="skeleton skeleton--line"></div>
+                <div class="skeleton skeleton--line skeleton--line-short"></div>
+            </div>
+        </template>
+
+        <!-- Slot content rendered only after intersection is triggered -->
+        <template lwc:if={isVisible}>
+            <div class="content-wrapper">
+                <slot></slot>
+            </div>
+        </template>
+
+    </div>
+</template>

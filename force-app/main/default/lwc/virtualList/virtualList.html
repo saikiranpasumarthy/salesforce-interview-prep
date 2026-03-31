@@ -1,0 +1,49 @@
+<!--
+    virtualList — virtual scrolling for large datasets:
+      • Renders only the rows currently visible in the viewport window
+      • Total container height maintained via spacer divs so scroll bar is accurate
+      • Scroll event recalculates startIndex; only changed rows are rerendered
+      • itemHeight @api: required for precise position calculation
+      • items @api: full data array (never sliced at the data layer)
+
+    Key interview concept — why virtualisation matters:
+      Rendering 10 000 <tr> rows is O(n) DOM nodes, slowing paint and memory.
+      Virtual scrolling keeps DOM nodes constant (≈ visibleCount + 2 buffer rows),
+      independent of dataset size — essential for large Opportunity / Case lists.
+
+    Algorithm:
+      startIndex = Math.floor(scrollTop / itemHeight)
+      endIndex   = startIndex + visibleCount + BUFFER
+      topPad     = startIndex * itemHeight          ← empty spacer above visible rows
+      bottomPad  = (totalItems - endIndex) * itemHeight  ← empty spacer below
+-->
+<template>
+    <div
+        class="scroll-container"
+        style={containerStyle}
+        onscroll={handleScroll}
+        lwc:ref="scrollContainer">
+
+        <!-- Top spacer keeps scroll position accurate -->
+        <div style={topSpacerStyle}></div>
+
+        <!-- Only visible slice of items is in the DOM -->
+        <template for:each={visibleItems} for:item="row">
+            <div key={row._virtualKey} class="virtual-row" style={rowStyle}>
+                <slot name="row" onslotchange={handleSlotChange}></slot>
+                <!-- Default row renderer when no named slot provided -->
+                <template lwc:if={row._useDefault}>
+                    <div class="default-row">
+                        <span class="row-index">#{row._index}</span>
+                        <span class="row-label">{row.label}</span>
+                        <span class="row-sub">{row.subLabel}</span>
+                    </div>
+                </template>
+            </div>
+        </template>
+
+        <!-- Bottom spacer maintains scroll bar thumb position -->
+        <div style={bottomSpacerStyle}></div>
+
+    </div>
+</template>
