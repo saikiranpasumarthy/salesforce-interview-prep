@@ -1,0 +1,143 @@
+:host {
+    display: block;
+}
+
+/* ── Screen-reader only utility ──────────────────────────────────────────── */
+
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+/* ── Table container ─────────────────────────────────────────────────────── */
+
+.table-container {
+    overflow-x: auto;
+    border: 1px solid var(--lwc-colorBorder, #dddbda);
+    border-radius: 4px;
+}
+
+.a11y-grid {
+    display: table;
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 400px;
+}
+
+/* ── Header row ──────────────────────────────────────────────────────────── */
+
+.grid-header-row {
+    display: table-row;
+    background-color: var(--lwc-colorBackgroundAlt, #fafaf9);
+}
+
+.grid-header-cell {
+    display: table-cell;
+    padding: 8px 12px;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--lwc-colorTextLabel, #3e3e3c);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    border-bottom: 2px solid var(--lwc-colorBorder, #dddbda);
+    white-space: nowrap;
+    user-select: none;
+    outline: none;
+}
+
+.grid-header-cell.sortable {
+    cursor: pointer;
+}
+
+.grid-header-cell.sortable:hover {
+    background-color: var(--lwc-colorBackgroundRowHover, #f3f3f3);
+    color: var(--lwc-brandColorPrimary, #0176d3);
+}
+
+.grid-header-cell.sorted {
+    color: var(--lwc-brandColorPrimary, #0176d3);
+}
+
+/* Focus ring on header cells — keyboard navigation indicator */
+.grid-header-cell:focus {
+    box-shadow: inset 0 0 0 2px var(--lwc-brandColorPrimary, #0176d3);
+}
+
+.col-label {
+    vertical-align: middle;
+    margin-right: 4px;
+}
+
+.sort-icon {
+    vertical-align: middle;
+    opacity: 0.5;
+}
+
+.grid-header-cell.sorted .sort-icon {
+    opacity: 1;
+}
+
+/* ── Data rows ───────────────────────────────────────────────────────────── */
+
+.grid-row {
+    display: table-row;
+    transition: background-color 0.1s ease;
+}
+
+.grid-row--even {
+    background-color: var(--lwc-colorBackground, #ffffff);
+}
+
+.grid-row--odd {
+    background-color: var(--lwc-colorBackgroundAlt, #fafaf9);
+}
+
+.grid-row:hover {
+    background-color: var(--lwc-colorBackgroundRowHover, #f3f3f3);
+}
+
+.grid-cell {
+    display: table-cell;
+    padding: 10px 12px;
+    font-size: 13px;
+    color: var(--lwc-colorTextDefault, #181818);
+    border-bottom: 1px solid var(--lwc-colorBorderSeparator, #e5e5e5);
+    outline: none;
+    max-width: 240px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* Focus ring on data cells */
+.grid-cell:focus {
+    box-shadow: inset 0 0 0 2px var(--lwc-brandColorPrimary, #0176d3);
+    background-color: var(--lwc-colorBackgroundSelectedRow, #eaf5fe);
+}
+
+/* ── Empty state ─────────────────────────────────────────────────────────── */
+
+.empty-row {
+    display: table-row;
+}
+
+.empty-cell {
+    display: table-cell;
+    padding: 24px 12px;
+    text-align: center;
+    color: var(--lwc-colorTextWeak, #706e6b);
+    font-style: italic;
+    font-size: 13px;
+    outline: none;
+}
+
+.empty-cell:focus {
+    box-shadow: inset 0 0 0 2px var(--lwc-brandColorPrimary, #0176d3);
+}
