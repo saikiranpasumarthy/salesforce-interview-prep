@@ -1,0 +1,118 @@
+<!--
+    opportunityList — Child component demonstrating:
+      • @wire with custom Apex method (cacheable=true)
+      • for:each list rendering with mandatory key directive
+      • Client-side filtering without re-fetching data
+      • Custom event dispatch with bubbles + composed flags
+      • Child-to-parent communication via c-discount-badge
+-->
+<template>
+    <div class="opportunity-list">
+
+        <!-- ── Search / filter bar ──────────────────────────────────────── -->
+        <div class="slds-m-bottom_small">
+            <lightning-input
+                type="search"
+                label="Filter opportunities"
+                placeholder="Search by name or stage…"
+                variant="label-hidden"
+                value={filterText}
+                onchange={handleFilterChange}>
+            </lightning-input>
+        </div>
+
+        <!-- ── Stage filter pills ───────────────────────────────────────── -->
+        <div class="slds-m-bottom_medium stage-pills">
+            <template for:each={stageFilters} for:item="stage">
+                <!--
+                    key MUST be a unique primitive per item.
+                    Missing key = runtime warning + incorrect diff/re-render.
+                    key should be stable (Id, not array index) — index keys
+                    cause subtle bugs when items are reordered or deleted.
+                -->
+                <span
+                    key={stage.value}
+                    class={stage.pillClass}
+                    data-stage={stage.value}
+                    onclick={handleStageFilter}
+                    role="button"
+                    tabindex="0">
+                    {stage.label}
+                </span>
+            </template>
+        </div>
+
+        <!-- ── Loading ──────────────────────────────────────────────────── -->
+        <template lwc:if={isLoading}>
+            <div class="slds-align_absolute-center slds-p-around_medium">
+                <lightning-spinner size="small" alternative-text="Loading opportunities…">
+                </lightning-spinner>
+            </div>
+        </template>
+
+        <!-- ── Error ────────────────────────────────────────────────────── -->
+        <template lwc:elseif={hasError}>
+            <div class="slds-notify slds-notify_alert slds-theme_error" role="alert">
+                <lightning-icon icon-name="utility:error" size="small"
+                    class="slds-m-right_x-small">
+                </lightning-icon>
+                {errorMessage}
+            </div>
+        </template>
+
+        <!-- ── Results ──────────────────────────────────────────────────── -->
+        <template lwc:elseif={hasResults}>
+            <ul class="slds-has-list-interactions">
+                <template for:each={filteredOpportunities} for:item="opp">
+                    <li key={opp.id}
+                        class="opp-item slds-p-around_small"
+                        data-id={opp.id}
+                        onclick={handleOpportunityClick}>
+
+                        <div class="slds-grid slds-gutters slds-grid_vertical-align-center">
+
+                            <!-- Left: name + stage + close date -->
+                            <div class="slds-col">
+                                <p class="slds-text-title_bold opp-name">{opp.name}</p>
+                                <p class="slds-text-body_small slds-text-color_weak">
+                                    {opp.stageName} · Closes {opp.closeDateFormatted}
+                                </p>
+                            </div>
+
+                            <!-- Right: discount badge (leaf component) -->
+                            <div class="slds-col slds-no-flex">
+                                <!--
+                                    Kebab-case in HTML (discount-percent) maps to
+                                    camelCase in JS (@api discountPercent).
+                                    This is a hard LWC rule — violating it causes
+                                    a runtime warning and the property is not set.
+                                -->
+                                <c-discount-badge
+                                    discount-percent={opp.discountPercent}
+                                    final-price={opp.finalPrice}>
+                                </c-discount-badge>
+                            </div>
+
+                        </div>
+                    </li>
+                </template>
+            </ul>
+            <p class="slds-text-body_small slds-m-top_small slds-text-color_weak">
+                {recordCountLabel}
+            </p>
+        </template>
+
+        <!-- ── Empty state ──────────────────────────────────────────────── -->
+        <template lwc:else>
+            <div class="slds-align_absolute-center slds-p-around_medium empty-state">
+                <lightning-icon icon-name="utility:opportunity" size="large"
+                    class="slds-m-bottom_small">
+                </lightning-icon>
+                <p class="slds-text-body_regular slds-text-color_weak">
+                    No opportunities match your filter.
+                </p>
+            </div>
+        </template>
+
+    </div>
+</template>
