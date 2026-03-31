@@ -1,0 +1,63 @@
+<!--
+    flowProgressIndicator — Custom LWC component for use inside Screen Flows.
+
+    FLOW SCREEN COMPONENT REQUIREMENTS:
+    ════════════════════════════════════
+    • Target: lightning__FlowScreen in js-meta.xml
+    • @api availableActions: array injected by the Flow runtime listing which
+      navigation actions are currently available ('NEXT', 'BACK', 'FINISH', 'PAUSE')
+    • FlowNavigationNextEvent   — dispatched to trigger "Next" navigation
+    • FlowNavigationBackEvent   — dispatched to trigger "Back" navigation
+    • FlowNavigationFinishEvent — dispatched to trigger "Finish" navigation
+    • @api validate()           — called by Flow before advancing; return
+      { isValid: false, errorMessage: '...' } to block navigation with an error
+
+    DYNAMIC VISIBILITY PATTERN:
+    ════════════════════════════
+    This component renders steps based on currentStep and totalSteps @api props
+    set by the Flow canvas at design time. The Flow passes different values on
+    each screen (step 1, 2, 3) without needing separate component instances.
+-->
+<template>
+    <!-- Progress steps row -->
+    <div class="progress-bar" role="progressbar"
+         aria-valuenow={currentStep}
+         aria-valuemin="1"
+         aria-valuemax={totalSteps}
+         aria-label={progressLabel}>
+
+        <template for:each={steps} for:item="step">
+            <div key={step.index} class={step.containerClass}>
+                <!-- Step circle -->
+                <div class={step.circleClass} aria-hidden="true">
+                    <!-- Completed: show check icon -->
+                    <template lwc:if={step.isCompleted}>
+                        <lightning-icon
+                            icon-name="utility:check"
+                            size="x-small"
+                            variant="inverse"
+                            aria-hidden="true">
+                        </lightning-icon>
+                    </template>
+                    <!-- Not completed: show step number -->
+                    <template lwc:else>
+                        <span class="step-number">{step.number}</span>
+                    </template>
+                </div>
+
+                <!-- Connector line between steps (hidden on last step) -->
+                <template lwc:if={step.showConnector}>
+                    <div class={step.connectorClass} aria-hidden="true"></div>
+                </template>
+
+                <!-- Step label below circle -->
+                <span class={step.labelClass}>{step.label}</span>
+            </div>
+        </template>
+    </div>
+
+    <!-- Screen-reader announcement of current step -->
+    <div class="sr-only" aria-live="polite" aria-atomic="true">
+        {progressLabel}
+    </div>
+</template>

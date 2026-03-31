@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<LightningComponentBundle xmlns="http://soap.sforce.com/2006/04/metadata">
+    <apiVersion>62.0</apiVersion>
+    <!--
+        isExposed: true — required for the component to appear in the
+        Flow Builder component palette when adding elements to a Screen.
+        Without isExposed=true, the component cannot be used in Screen Flows.
+    -->
+    <isExposed>true</isExposed>
+    <targets>
+        <!--
+            lightning__FlowScreen — marks this component as a Screen Flow component.
+            The Flow runtime injects @api availableActions and calls @api validate().
+            Required for FlowNavigationNextEvent etc. to work at runtime.
+        -->
+        <target>lightning__FlowScreen</target>
+    </targets>
+    <targetConfigs>
+        <!--
+            targetConfig for lightning__FlowScreen defines @api input/output props
+            visible in the Flow Builder property panel.
+
+            role values:
+              "inputOnly"    — Flow sets the value; component reads it. (default)
+              "outputOnly"   — Component sets the value via FlowAttributeChangeEvent; Flow reads it.
+              "inputOutput"  — Bidirectional; both Flow and component can read/write.
+
+            Interview: what is the difference between role="inputOnly" and a plain @api prop?
+              A plain @api prop without a targetConfig entry is not visible in Flow Builder.
+              role="inputOnly" exposes it in the Flow Builder's input mapping panel so
+              admins can bind a Flow variable to this prop at design time.
+        -->
+        <targetConfig targets="lightning__FlowScreen">
+            <property
+                name="currentStep"
+                type="Integer"
+                default="1"
+                role="inputOnly"
+                label="Current Step Number"
+                description="1-based index of the active step"/>
+            <property
+                name="totalSteps"
+                type="Integer"
+                default="3"
+                role="inputOnly"
+                label="Total Number of Steps"/>
+            <property
+                name="stepLabels"
+                type="String"
+                default="Step 1,Step 2,Step 3"
+                role="inputOnly"
+                label="Step Labels (comma-separated)"
+                description="Example: Account,Contact,Opportunity"/>
+        </targetConfig>
+    </targetConfigs>
+</LightningComponentBundle>

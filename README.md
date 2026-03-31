@@ -21,7 +21,7 @@ Senior Salesforce Developer | 9+ Years | Architect-Track Preparation
 | 10 | LWC Advanced, Navigation & Page Reference, LWC Performance | Phase 1 | ✅ Done | [Day 10 →](docs/day-10.md) |
 | 11 | LWC Testing (Jest), LWC with Apex, LWC Accessibility | Phase 1 | ✅ Done | [Day 11 →](docs/day-11.md) |
 | 12 | Flows: Record-Triggered & Auto, Flow Best Practices, Flow vs Apex | Phase 1 | ✅ Done | [Day 12 →](docs/day-12.md) |
-| 13 | Flows: Screen Flows & Subflows, Dynamic Forms, Flow Error Handling | Phase 1 | ⬜ Pending | — |
+| 13 | Flows: Screen Flows & Subflows, Dynamic Forms, Flow Error Handling | Phase 1 | ✅ Done | [Day 13 →](docs/day-13.md) |
 | 14 | Security Model Deep Dive, Sharing Rules, OWD, Apex Sharing | Phase 1 | ⬜ Pending | — |
 | 15 | Admin: Object Model & Validation, Reports & Dashboards, Audit Trail | Phase 1 | ⬜ Pending | — |
 | 16 | REST API Integrations, Named Credentials & Auth, External Services | Phase 2 | ⬜ Pending | — |

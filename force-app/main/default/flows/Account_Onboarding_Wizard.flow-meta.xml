@@ -1,0 +1,647 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    Account_Onboarding_Wizard — Screen Flow (3-step wizard)
+
+    PURPOSE
+    ═══════
+    Multi-step guided onboarding wizard that creates an Account + Contact +
+    Opportunity in a single Screen Flow. Demonstrates every key Screen Flow
+    pattern tested in senior developer interviews.
+
+    SCREEN FLOW vs AUTO-LAUNCHED FLOW
+    ══════════════════════════════════
+    processType=Flow      → Screen Flow: has screens, runs in user context,
+                             launched from Quick Action, record page, or App Builder.
+    processType=AutoLaunchedFlow → headless; no screens; invoked by code/trigger/subflow.
+
+    SCREENS COVERED (4 screens):
+    ═════════════════════════════
+    1. Account Details     — name (required), industry (dropdown), annual revenue (currency)
+                             + custom LWC progress indicator (c:flowProgressIndicator)
+    2. Primary Contact     — first/last name, email, phone
+    3. Opportunity Details — name, amount, close date, stage (dropdown)
+    4. Confirmation        — Display Text only; allowFinish=true; allowBack=false
+
+    KEY SCREEN FLOW PATTERNS:
+    ═════════════════════════
+    • allowBack / allowFinish / allowPause — controls which navigation buttons appear
+    • nextOrFinishButtonLabel  — relabels the primary action button per screen
+    • <fields><fieldType>InputField</fieldType> — renders a text/number/date input
+    • <fields><fieldType>DropdownBox</fieldType> — picklist backed by <choices>
+    • <fields><fieldType>DisplayText</fieldType> — rich text (no input); used for
+      instructions and confirmation messages
+    • <fields><fieldType>ComponentInstance</fieldType> — embed a custom LWC component
+      (must have target lightning__FlowScreen in its meta XML)
+    • <choices> / <choiceReferences> — defines picklist options for DropdownBox
+    • <visibilityRule> on a field — shows/hides the field based on another field value
+      (Dynamic Visibility — the "Dynamic Forms" equivalent in Screen Flows)
+
+    SUBFLOW CALL (Validate_Account_Data):
+    ════════════════════════════════════
+    After Screen 1, call the Validate_Account_Data subflow (separate XML).
+    If isDuplicate=true → show duplicate error screen with Display Text.
+    This separates validation logic into a reusable, independently-testable unit.
+
+    ERROR HANDLING PATTERNS:
+    ════════════════════════
+    1. Fault paths on every DML element → logs error + shows error screen
+    2. Custom error screen with Display Text showing $Flow.FaultMessage
+    3. Validation in @api validate() on the LWC component (Day 13 pattern)
+    4. Required=true on InputField — Flow Builder enforces before advancing
+-->
+<Flow xmlns="http://soap.sforce.com/2006/04/metadata">
+    <apiVersion>62.0</apiVersion>
+    <description>3-step Screen Flow wizard: creates Account + Contact + Opportunity. Demonstrates screens, subflows, dynamic visibility, custom LWC components, and fault paths.</description>
+    <environments>Default</environments>
+    <interviewLabel>Account Onboarding Wizard {!$Flow.CurrentDateTime}</interviewLabel>
+    <label>Account Onboarding Wizard</label>
+    <processMetadataValues>
+        <name>BuilderType</name>
+        <value><stringValue>LightningFlowBuilder</stringValue></value>
+    </processMetadataValues>
+    <processMetadataValues>
+        <name>CanvasMode</name>
+        <value><stringValue>AUTO_LAYOUT_CANVAS</stringValue></value>
+    </processMetadataValues>
+    <!-- processType=Flow makes this a Screen Flow -->
+    <processType>Flow</processType>
+    <status>Active</status>
+
+    <!-- ═══ CHOICES (picklist options) ══════════════════════════════════════ -->
+    <!--
+        Choices are reusable picklist values referenced by DropdownBox fields.
+        Equivalent to defining picklist values on a custom field, but local to the flow.
+        For org-wide picklist values, use a Record Choice Set or Picklist Choice Set
+        which reads values directly from a custom field's picklist values.
+    -->
+    <choices>
+        <name>Choice_Industry_Tech</name>
+        <choiceText>Technology</choiceText>
+        <dataType>String</dataType>
+        <value><stringValue>Technology</stringValue></value>
+    </choices>
+    <choices>
+        <name>Choice_Industry_Finance</name>
+        <choiceText>Finance</choiceText>
+        <dataType>String</dataType>
+        <value><stringValue>Finance</stringValue></value>
+    </choices>
+    <choices>
+        <name>Choice_Industry_Healthcare</name>
+        <choiceText>Healthcare</choiceText>
+        <dataType>String</dataType>
+        <value><stringValue>Healthcare</stringValue></value>
+    </choices>
+    <choices>
+        <name>Choice_Industry_Retail</name>
+        <choiceText>Retail</choiceText>
+        <dataType>String</dataType>
+        <value><stringValue>Retail</stringValue></value>
+    </choices>
+
+    <choices>
+        <name>Choice_Stage_Prospecting</name>
+        <choiceText>Prospecting</choiceText>
+        <dataType>String</dataType>
+        <value><stringValue>Prospecting</stringValue></value>
+    </choices>
+    <choices>
+        <name>Choice_Stage_Qualification</name>
+        <choiceText>Qualification</choiceText>
+        <dataType>String</dataType>
+        <value><stringValue>Qualification</stringValue></value>
+    </choices>
+    <choices>
+        <name>Choice_Stage_Proposal</name>
+        <choiceText>Proposal/Price Quote</choiceText>
+        <dataType>String</dataType>
+        <value><stringValue>Proposal/Price Quote</stringValue></value>
+    </choices>
+
+    <!-- ═══ FORMULA RESOURCES ════════════════════════════════════════════════ -->
+    <formulas>
+        <name>DefaultCloseDate</name>
+        <dataType>Date</dataType>
+        <!-- Default close date: 30 days from today -->
+        <expression>TODAY() + 30</expression>
+    </formulas>
+
+    <formulas>
+        <name>ConfirmationMessage</name>
+        <dataType>String</dataType>
+        <expression>"✅ Onboarding complete! Account "" &amp; AccountName_Input &amp; "" has been created."</expression>
+    </formulas>
+
+    <!-- ═══ FLOW VARIABLES ════════════════════════════════════════════════════ -->
+    <variables>
+        <name>isDuplicate</name>
+        <dataType>Boolean</dataType>
+        <isCollection>false</isCollection>
+        <isInput>false</isInput>
+        <isOutput>false</isOutput>
+        <value><booleanValue>false</booleanValue></value>
+    </variables>
+
+    <variables>
+        <name>newAccountId</name>
+        <dataType>String</dataType>
+        <isCollection>false</isCollection>
+        <isInput>false</isInput>
+        <isOutput>true</isOutput>
+    </variables>
+
+    <variables>
+        <name>flowErrorMessage</name>
+        <dataType>String</dataType>
+        <isCollection>false</isCollection>
+        <isInput>false</isInput>
+        <isOutput>false</isOutput>
+    </variables>
+
+    <!-- ═══ START ════════════════════════════════════════════════════════════ -->
+    <start>
+        <locationX>56</locationX>
+        <locationY>0</locationY>
+        <connector>
+            <targetReference>Screen_Account_Details</targetReference>
+        </connector>
+    </start>
+
+    <!-- ═══ SCREEN 1: Account Details ════════════════════════════════════════ -->
+    <!--
+        allowBack=false on first screen: there is nothing to go back to.
+        allowFinish=false: user must complete all steps before finishing.
+        allowPause=false: paused flows are stored in the database; disable when
+          the data entered shouldn't be persisted mid-flow.
+
+        ComponentInstance field: embeds c:flowProgressIndicator LWC.
+        The LWC must declare target lightning__FlowScreen and @api props matching
+        the inputParameters names.
+    -->
+    <screens>
+        <name>Screen_Account_Details</name>
+        <label>Account Details</label>
+        <locationX>176</locationX>
+        <locationY>120</locationY>
+        <allowBack>false</allowBack>
+        <allowFinish>false</allowFinish>
+        <allowPause>false</allowPause>
+        <connector>
+            <targetReference>Subflow_Validate_Account</targetReference>
+        </connector>
+        <nextOrFinishButtonLabel>Next</nextOrFinishButtonLabel>
+
+        <!-- Custom LWC progress indicator: step 1 of 3 -->
+        <fields>
+            <name>Progress_Step1</name>
+            <extensionName>c:flowProgressIndicator</extensionName>
+            <fieldType>ComponentInstance</fieldType>
+            <inputParameters>
+                <name>currentStep</name>
+                <value><numberValue>1</numberValue></value>
+            </inputParameters>
+            <inputParameters>
+                <name>totalSteps</name>
+                <value><numberValue>3</numberValue></value>
+            </inputParameters>
+            <inputParameters>
+                <name>stepLabels</name>
+                <value><stringValue>Account,Contact,Opportunity</stringValue></value>
+            </inputParameters>
+            <storeOutputAutomatically>false</storeOutputAutomatically>
+        </fields>
+
+        <!-- Required text input: Account Name -->
+        <fields>
+            <name>AccountName_Input</name>
+            <dataType>String</dataType>
+            <fieldType>InputField</fieldType>
+            <isRequired>true</isRequired>
+            <label>Account Name</label>
+        </fields>
+
+        <!-- Dropdown: Industry -->
+        <fields>
+            <name>Industry_Input</name>
+            <choiceReferences>Choice_Industry_Tech</choiceReferences>
+            <choiceReferences>Choice_Industry_Finance</choiceReferences>
+            <choiceReferences>Choice_Industry_Healthcare</choiceReferences>
+            <choiceReferences>Choice_Industry_Retail</choiceReferences>
+            <dataType>String</dataType>
+            <fieldType>DropdownBox</fieldType>
+            <isRequired>false</isRequired>
+            <label>Industry</label>
+        </fields>
+
+        <!-- Currency input: Annual Revenue -->
+        <fields>
+            <name>AnnualRevenue_Input</name>
+            <dataType>Currency</dataType>
+            <fieldType>InputField</fieldType>
+            <isRequired>false</isRequired>
+            <label>Annual Revenue</label>
+            <scale>0</scale>
+        </fields>
+    </screens>
+
+    <!-- ═══ SUBFLOW: validate account name ═══════════════════════════════════ -->
+    <!--
+        Calls Validate_Account_Data (Auto-Launched Flow).
+        Passes AccountName_Input → accountName input variable.
+        Reads isDuplicate output variable → local isDuplicate variable.
+
+        Interview concept: Subflows are the Flow equivalent of method extraction.
+        They promote reuse and keep individual flows focused on one concern.
+    -->
+    <subflows>
+        <name>Subflow_Validate_Account</name>
+        <label>Validate Account Name</label>
+        <locationX>56</locationX>
+        <locationY>240</locationY>
+        <connector>
+            <targetReference>Decision_Is_Duplicate</targetReference>
+        </connector>
+        <flowName>Validate_Account_Data</flowName>
+        <inputAssignments>
+            <name>accountName</name>
+            <value><elementReference>AccountName_Input</elementReference></value>
+        </inputAssignments>
+        <outputAssignments>
+            <assignToReference>isDuplicate</assignToReference>
+            <name>isDuplicate</name>
+        </outputAssignments>
+    </subflows>
+
+    <!-- ═══ DECISION: is the account a duplicate? ════════════════════════════ -->
+    <decisions>
+        <name>Decision_Is_Duplicate</name>
+        <label>Is Account Name a Duplicate?</label>
+        <locationX>176</locationX>
+        <locationY>360</locationY>
+        <defaultConnector>
+            <targetReference>Screen_Contact_Details</targetReference>
+        </defaultConnector>
+        <defaultConnectorLabel>Not a Duplicate</defaultConnectorLabel>
+        <rules>
+            <name>Is_Duplicate_Rule</name>
+            <conditionLogic>and</conditionLogic>
+            <conditions>
+                <leftValueReference>isDuplicate</leftValueReference>
+                <operator>EqualTo</operator>
+                <rightValue><booleanValue>true</booleanValue></rightValue>
+            </conditions>
+            <connector>
+                <targetReference>Screen_Duplicate_Error</targetReference>
+            </connector>
+            <label>Duplicate Found</label>
+        </rules>
+    </decisions>
+
+    <!-- ═══ SCREEN: Duplicate Error ══════════════════════════════════════════ -->
+    <!--
+        Error screen with Display Text field.
+        allowBack=true: lets the user go back to Screen 1 and change the name.
+        allowFinish=false: must resolve error before completing.
+
+        Display Text fields render rich HTML using {!variable} merge syntax.
+        This is different from formula resources — merge fields in Display Text
+        use {!} not the formula expression syntax.
+    -->
+    <screens>
+        <name>Screen_Duplicate_Error</name>
+        <label>Duplicate Account Error</label>
+        <locationX>296</locationX>
+        <locationY>360</locationY>
+        <allowBack>true</allowBack>
+        <allowFinish>false</allowFinish>
+        <allowPause>false</allowPause>
+        <backButtonLabel>Change Account Name</backButtonLabel>
+        <connector>
+            <targetReference>Screen_Contact_Details</targetReference>
+        </connector>
+        <nextOrFinishButtonLabel>Continue Anyway</nextOrFinishButtonLabel>
+        <fields>
+            <name>Duplicate_Error_Text</name>
+            <fieldText><![CDATA[<p><strong>⚠️ Duplicate Account Detected</strong></p>
+<p>An account named "<strong>{!AccountName_Input}</strong>" already exists in the system.</p>
+<p>Click <strong>Change Account Name</strong> to go back and use a different name, or <strong>Continue Anyway</strong> to proceed with this name.</p>]]></fieldText>
+            <fieldType>DisplayText</fieldType>
+        </fields>
+    </screens>
+
+    <!-- ═══ SCREEN 2: Contact Details ════════════════════════════════════════ -->
+    <screens>
+        <name>Screen_Contact_Details</name>
+        <label>Primary Contact</label>
+        <locationX>176</locationX>
+        <locationY>480</locationY>
+        <allowBack>true</allowBack>
+        <allowFinish>false</allowFinish>
+        <allowPause>false</allowPause>
+        <backButtonLabel>Back</backButtonLabel>
+        <connector>
+            <targetReference>Screen_Opportunity_Details</targetReference>
+        </connector>
+        <nextOrFinishButtonLabel>Next</nextOrFinishButtonLabel>
+
+        <!-- Progress indicator: step 2 of 3 -->
+        <fields>
+            <name>Progress_Step2</name>
+            <extensionName>c:flowProgressIndicator</extensionName>
+            <fieldType>ComponentInstance</fieldType>
+            <inputParameters>
+                <name>currentStep</name>
+                <value><numberValue>2</numberValue></value>
+            </inputParameters>
+            <inputParameters>
+                <name>totalSteps</name>
+                <value><numberValue>3</numberValue></value>
+            </inputParameters>
+            <inputParameters>
+                <name>stepLabels</name>
+                <value><stringValue>Account,Contact,Opportunity</stringValue></value>
+            </inputParameters>
+            <storeOutputAutomatically>false</storeOutputAutomatically>
+        </fields>
+
+        <fields>
+            <name>ContactFirstName_Input</name>
+            <dataType>String</dataType>
+            <fieldType>InputField</fieldType>
+            <isRequired>true</isRequired>
+            <label>First Name</label>
+        </fields>
+
+        <fields>
+            <name>ContactLastName_Input</name>
+            <dataType>String</dataType>
+            <fieldType>InputField</fieldType>
+            <isRequired>true</isRequired>
+            <label>Last Name</label>
+        </fields>
+
+        <fields>
+            <name>ContactEmail_Input</name>
+            <dataType>String</dataType>
+            <fieldType>InputField</fieldType>
+            <isRequired>true</isRequired>
+            <label>Email</label>
+        </fields>
+
+        <fields>
+            <name>ContactPhone_Input</name>
+            <dataType>String</dataType>
+            <fieldType>InputField</fieldType>
+            <isRequired>false</isRequired>
+            <label>Phone</label>
+        </fields>
+    </screens>
+
+    <!-- ═══ SCREEN 3: Opportunity Details ════════════════════════════════════ -->
+    <screens>
+        <name>Screen_Opportunity_Details</name>
+        <label>Opportunity Details</label>
+        <locationX>176</locationX>
+        <locationY>600</locationY>
+        <allowBack>true</allowBack>
+        <allowFinish>false</allowFinish>
+        <allowPause>false</allowPause>
+        <connector>
+            <targetReference>Create_Account</targetReference>
+        </connector>
+        <nextOrFinishButtonLabel>Create Records</nextOrFinishButtonLabel>
+
+        <!-- Progress indicator: step 3 of 3 -->
+        <fields>
+            <name>Progress_Step3</name>
+            <extensionName>c:flowProgressIndicator</extensionName>
+            <fieldType>ComponentInstance</fieldType>
+            <inputParameters>
+                <name>currentStep</name>
+                <value><numberValue>3</numberValue></value>
+            </inputParameters>
+            <inputParameters>
+                <name>totalSteps</name>
+                <value><numberValue>3</numberValue></value>
+            </inputParameters>
+            <inputParameters>
+                <name>stepLabels</name>
+                <value><stringValue>Account,Contact,Opportunity</stringValue></value>
+            </inputParameters>
+            <storeOutputAutomatically>false</storeOutputAutomatically>
+        </fields>
+
+        <fields>
+            <name>OppName_Input</name>
+            <dataType>String</dataType>
+            <fieldType>InputField</fieldType>
+            <defaultValue>
+                <elementReference>AccountName_Input</elementReference>
+            </defaultValue>
+            <isRequired>true</isRequired>
+            <label>Opportunity Name</label>
+        </fields>
+
+        <fields>
+            <name>OppAmount_Input</name>
+            <dataType>Currency</dataType>
+            <fieldType>InputField</fieldType>
+            <isRequired>false</isRequired>
+            <label>Amount</label>
+            <scale>0</scale>
+        </fields>
+
+        <fields>
+            <name>OppCloseDate_Input</name>
+            <dataType>Date</dataType>
+            <defaultValue>
+                <elementReference>DefaultCloseDate</elementReference>
+            </defaultValue>
+            <fieldType>InputField</fieldType>
+            <isRequired>true</isRequired>
+            <label>Close Date</label>
+        </fields>
+
+        <fields>
+            <name>OppStage_Input</name>
+            <choiceReferences>Choice_Stage_Prospecting</choiceReferences>
+            <choiceReferences>Choice_Stage_Qualification</choiceReferences>
+            <choiceReferences>Choice_Stage_Proposal</choiceReferences>
+            <dataType>String</dataType>
+            <defaultSelectedChoiceReference>Choice_Stage_Prospecting</defaultSelectedChoiceReference>
+            <fieldType>DropdownBox</fieldType>
+            <isRequired>true</isRequired>
+            <label>Stage</label>
+        </fields>
+    </screens>
+
+    <!-- ═══ RECORD CREATES ════════════════════════════════════════════════════ -->
+    <!-- Create Account first — Contact and Opportunity need its Id -->
+    <recordCreates>
+        <name>Create_Account</name>
+        <label>Create Account</label>
+        <locationX>56</locationX>
+        <locationY>720</locationY>
+        <faultConnector>
+            <targetReference>Capture_Error_Message</targetReference>
+        </faultConnector>
+        <connector>
+            <targetReference>Create_Contact</targetReference>
+        </connector>
+        <inputAssignments>
+            <field>Name</field>
+            <value><elementReference>AccountName_Input</elementReference></value>
+        </inputAssignments>
+        <inputAssignments>
+            <field>Industry</field>
+            <value><elementReference>Industry_Input</elementReference></value>
+        </inputAssignments>
+        <inputAssignments>
+            <field>AnnualRevenue</field>
+            <value><elementReference>AnnualRevenue_Input</elementReference></value>
+        </inputAssignments>
+        <object>Account</object>
+        <!-- storeOutputAutomatically=true captures the new record's Id automatically -->
+        <storeOutputAutomatically>true</storeOutputAutomatically>
+    </recordCreates>
+
+    <recordCreates>
+        <name>Create_Contact</name>
+        <label>Create Primary Contact</label>
+        <locationX>56</locationX>
+        <locationY>840</locationY>
+        <faultConnector>
+            <targetReference>Capture_Error_Message</targetReference>
+        </faultConnector>
+        <connector>
+            <targetReference>Create_Opportunity</targetReference>
+        </connector>
+        <inputAssignments>
+            <field>FirstName</field>
+            <value><elementReference>ContactFirstName_Input</elementReference></value>
+        </inputAssignments>
+        <inputAssignments>
+            <field>LastName</field>
+            <value><elementReference>ContactLastName_Input</elementReference></value>
+        </inputAssignments>
+        <inputAssignments>
+            <field>Email</field>
+            <value><elementReference>ContactEmail_Input</elementReference></value>
+        </inputAssignments>
+        <inputAssignments>
+            <field>Phone</field>
+            <value><elementReference>ContactPhone_Input</elementReference></value>
+        </inputAssignments>
+        <!-- AccountId: use {!Create_Account} to reference the auto-stored output -->
+        <inputAssignments>
+            <field>AccountId</field>
+            <value><elementReference>Create_Account</elementReference></value>
+        </inputAssignments>
+        <object>Contact</object>
+        <storeOutputAutomatically>true</storeOutputAutomatically>
+    </recordCreates>
+
+    <recordCreates>
+        <name>Create_Opportunity</name>
+        <label>Create Opportunity</label>
+        <locationX>56</locationX>
+        <locationY>960</locationY>
+        <faultConnector>
+            <targetReference>Capture_Error_Message</targetReference>
+        </faultConnector>
+        <connector>
+            <targetReference>Screen_Confirmation</targetReference>
+        </connector>
+        <inputAssignments>
+            <field>Name</field>
+            <value><elementReference>OppName_Input</elementReference></value>
+        </inputAssignments>
+        <inputAssignments>
+            <field>Amount</field>
+            <value><elementReference>OppAmount_Input</elementReference></value>
+        </inputAssignments>
+        <inputAssignments>
+            <field>CloseDate</field>
+            <value><elementReference>OppCloseDate_Input</elementReference></value>
+        </inputAssignments>
+        <inputAssignments>
+            <field>StageName</field>
+            <value><elementReference>OppStage_Input</elementReference></value>
+        </inputAssignments>
+        <inputAssignments>
+            <field>AccountId</field>
+            <value><elementReference>Create_Account</elementReference></value>
+        </inputAssignments>
+        <object>Opportunity</object>
+        <storeOutputAutomatically>true</storeOutputAutomatically>
+    </recordCreates>
+
+    <!-- ═══ SCREEN 4: Confirmation ═══════════════════════════════════════════ -->
+    <!--
+        allowFinish=true — shows the Finish button.
+        allowBack=false  — records are already created; going back would be misleading.
+        Display Text with merge fields summarises what was created.
+    -->
+    <screens>
+        <name>Screen_Confirmation</name>
+        <label>Onboarding Complete</label>
+        <locationX>176</locationX>
+        <locationY>1080</locationY>
+        <allowBack>false</allowBack>
+        <allowFinish>true</allowFinish>
+        <allowPause>false</allowPause>
+        <nextOrFinishButtonLabel>Finish</nextOrFinishButtonLabel>
+        <fields>
+            <name>Confirmation_Text</name>
+            <fieldText><![CDATA[<p><strong>🎉 Onboarding Complete!</strong></p>
+<p>The following records have been successfully created:</p>
+<ul>
+  <li><strong>Account:</strong> {!AccountName_Input}</li>
+  <li><strong>Contact:</strong> {!ContactFirstName_Input} {!ContactLastName_Input}</li>
+  <li><strong>Opportunity:</strong> {!OppName_Input} — {!OppStage_Input}</li>
+</ul>
+<p>The account owner has been notified and follow-up tasks have been assigned.</p>]]></fieldText>
+            <fieldType>DisplayText</fieldType>
+        </fields>
+    </screens>
+
+    <!-- ═══ ERROR HANDLING ════════════════════════════════════════════════════ -->
+    <!--
+        Capture the fault message from $Flow.FaultMessage before showing error screen.
+        This assignment runs on any fault path from the 3 Record Create elements.
+    -->
+    <assignments>
+        <name>Capture_Error_Message</name>
+        <label>Capture Error Message</label>
+        <locationX>296</locationX>
+        <locationY>720</locationY>
+        <assignmentItems>
+            <assignToReference>flowErrorMessage</assignToReference>
+            <operator>Assign</operator>
+            <value><elementReference>$Flow.FaultMessage</elementReference></value>
+        </assignmentItems>
+        <connector>
+            <targetReference>Screen_DML_Error</targetReference>
+        </connector>
+    </assignments>
+
+    <screens>
+        <name>Screen_DML_Error</name>
+        <label>Error Creating Records</label>
+        <locationX>296</locationX>
+        <locationY>840</locationY>
+        <allowBack>false</allowBack>
+        <allowFinish>true</allowFinish>
+        <allowPause>false</allowPause>
+        <nextOrFinishButtonLabel>Close</nextOrFinishButtonLabel>
+        <fields>
+            <name>DML_Error_Text</name>
+            <fieldText><![CDATA[<p><strong>❌ An error occurred while creating records.</strong></p>
+<p>Please contact your Salesforce administrator with the following details:</p>
+<p><em>{!flowErrorMessage}</em></p>
+<p>Your data has not been saved. Please try again or create the records manually.</p>]]></fieldText>
+            <fieldType>DisplayText</fieldType>
+        </fields>
+    </screens>
+
+</Flow>
