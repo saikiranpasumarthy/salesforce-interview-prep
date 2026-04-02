@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    Project__c — Custom object with OWD = Private
+
+    PURPOSE
+    ═══════
+    Demonstrates programmatic sharing (Apex Managed Sharing) on a custom object
+    with a restrictive OWD setting. With OWD=Private:
+      • Only the record owner and users above them in the role hierarchy can see it
+      • No user can see another user's records unless sharing is explicitly granted
+      • Sharing can be opened via: Sharing Rules, Manual Share, Apex Managed Sharing,
+        or changing the OWD to a more permissive setting
+
+    OWD OPTIONS FOR CUSTOM OBJECTS:
+    ════════════════════════════════
+    Private             — owner + role hierarchy only (most restrictive)
+    PublicReadOnly      — all users can read; only owner can edit
+    PublicReadWrite     — all users can read and edit
+    ControlledByParent  — only valid on detail side of Master-Detail;
+                          access determined by parent's OWD
+    PublicFullAccess    — all users can read, edit, and delete (rare)
+
+    WHY OWD MATTERS:
+    ════════════════
+    OWD is the BASELINE — sharing rules can only OPEN access up from OWD,
+    never restrict it. If OWD=PublicReadWrite, sharing rules cannot make
+    a record private for specific users.
+
+    SHARING MODEL = Private requires a custom RowCause for Apex Managed Sharing.
+    The RowCause is defined as a custom sharing reason and allows differentiating
+    between shares granted for different business reasons (project member vs reviewer).
+-->
+<CustomObject xmlns="http://soap.sforce.com/2006/04/metadata">
+    <deploymentStatus>Deployed</deploymentStatus>
+    <description>Demonstration object for Apex Managed Sharing patterns. OWD=Private so all record access must be explicitly granted via sharing rules or Apex.</description>
+    <enableActivities>false</enableActivities>
+    <enableBulkApi>true</enableBulkApi>
+    <enableFeeds>false</enableFeeds>
+    <enableHistory>false</enableHistory>
+    <enableLicensing>false</enableLicensing>
+    <enableReports>true</enableReports>
+    <enableSearch>true</enableSearch>
+    <enableSharing>true</enableSharing>
+    <enableStreamingApi>true</enableStreamingApi>
+    <label>Project</label>
+    <nameField>
+        <label>Project Name</label>
+        <type>Text</type>
+    </nameField>
+    <pluralLabel>Projects</pluralLabel>
+    <!-- sharingModel=Private: OWD baseline — only owner + role hierarchy can access -->
+    <sharingModel>Private</sharingModel>
+    <visibility>Public</visibility>
+</CustomObject>
