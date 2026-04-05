@@ -24,7 +24,7 @@ Senior Salesforce Developer | 9+ Years | Architect-Track Preparation
 | 13 | Flows: Screen Flows & Subflows, Dynamic Forms, Flow Error Handling | Phase 1 | ✅ Done | [Day 13 →](docs/day-13.md) |
 | 14 | Security Model Deep Dive, Sharing Rules, OWD, Apex Sharing | Phase 1 | ✅ Done | [Day 14 →](docs/day-14.md) |
 | 15 | Admin: Object Model & Validation, Reports & Dashboards, Audit Trail | Phase 1 | ✅ Done | [Day 15 →](docs/day-15.md) |
-| 16 | REST API Integrations, Named Credentials & Auth, External Services | Phase 2 | ⬜ Pending | — |
+| 16 | REST API Integrations, Named Credentials & Auth, External Services | Phase 2 | ✅ Done | [Day 16 →](docs/day-16.md) |
 | 17 | SOAP & Callout Patterns, Outbound Messaging, Callouts from Async | Phase 2 | ⬜ Pending | — |
 | 18 | Platform Events Deep Dive, CDC, Pub/Sub API | Phase 2 | ⬜ Pending | — |
 | 19 | DevOps: sf CLI & Scratch Orgs, Unlocked Packages, Manifest Deployments | Phase 2 | ⬜ Pending | — |
