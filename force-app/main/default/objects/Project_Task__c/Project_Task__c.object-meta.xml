@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    Project_Task__c — Master-Detail child of Project__c
+
+    RELATIONSHIP TYPE: Master-Detail
+    ════════════════════════════════
+    • sharingModel=ControlledByParent: the task inherits the Project's OWD + sharing
+    • Cascade delete: deleting a Project deletes all its Tasks
+    • Roll-up summary fields can be defined on the parent (Project__c)
+    • The master-detail field (Project__c) is required and cannot be changed after insert
+      without special permission
+
+    CONTRAST WITH LOOKUP:
+    ═════════════════════
+    Lookup          Master-Detail
+    ──────────      ─────────────
+    Optional        Required (by default)
+    No cascade      Cascade delete from parent
+    Own OWD         Inherits parent OWD (ControlledByParent)
+    No roll-up      Roll-up summary fields on parent
+    Parent survives Parent deletion deletes children
+
+    MANY-TO-MANY PATTERN:
+    ═════════════════════
+    Junction object has two Master-Detail fields pointing to each parent.
+    Both parents cascade-delete into the junction. Both define roll-ups.
+-->
+<CustomObject xmlns="http://soap.sforce.com/2006/04/metadata">
+    <deploymentStatus>Deployed</deploymentStatus>
+    <description>Task belonging to a Project. Demonstrates Master-Detail relationship, ControlledByParent OWD, validation rules, and roll-up summary field setup.</description>
+    <enableActivities>false</enableActivities>
+    <enableBulkApi>true</enableBulkApi>
+    <enableFeeds>false</enableFeeds>
+    <enableHistory>true</enableHistory>
+    <enableLicensing>false</enableLicensing>
+    <enableReports>true</enableReports>
+    <enableSearch>true</enableSearch>
+    <enableSharing>true</enableSharing>
+    <enableStreamingApi>true</enableStreamingApi>
+    <label>Project Task</label>
+    <nameField>
+        <label>Task Name</label>
+        <type>Text</type>
+    </nameField>
+    <pluralLabel>Project Tasks</pluralLabel>
+    <!-- ControlledByParent — only valid for Master-Detail objects -->
+    <sharingModel>ControlledByParent</sharingModel>
+    <visibility>Public</visibility>
+</CustomObject>

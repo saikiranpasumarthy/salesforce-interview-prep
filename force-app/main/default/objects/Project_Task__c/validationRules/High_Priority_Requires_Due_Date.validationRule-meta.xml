@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    VALIDATION RULE: High_Priority_Requires_Due_Date
+    ══════════════════════════════════════════════════
+    Rule: High-priority tasks must have a Due Date.
+
+    FORMULA FUNCTIONS USED:
+    • ISPICKVAL(field, value)  — tests a picklist field value (do NOT use = for picklists)
+    • ISBLANK(field)           — true if field is null or empty string
+
+    ERROR LOCATION:
+    • errorDisplayField on Due_Date__c — shows inline red border on the field
+    • Omitting errorDisplayField → error appears at top of page
+-->
+<ValidationRule xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>High_Priority_Requires_Due_Date</fullName>
+    <active>true</active>
+    <description>High-priority tasks must have a Due Date set to enable scheduling.</description>
+    <errorConditionFormula>AND(
+    ISPICKVAL(Priority__c, 'High'),
+    ISBLANK(Due_Date__c)
+)</errorConditionFormula>
+    <errorDisplayField>Due_Date__c</errorDisplayField>
+    <errorMessage>High-priority tasks require a Due Date.</errorMessage>
+</ValidationRule>
