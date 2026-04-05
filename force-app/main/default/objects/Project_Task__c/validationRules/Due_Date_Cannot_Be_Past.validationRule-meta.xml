@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    VALIDATION RULE: Due_Date_Cannot_Be_Past
+    ══════════════════════════════════════════
+    Rule: New tasks cannot be created with a Due Date in the past.
+
+    FORMULA FUNCTIONS USED:
+    • ISNEW()              — true only during record INSERT; false on UPDATE
+    • NOT(ISBLANK(field))  — guard to skip blank dates
+    • TODAY()              — returns today's date (Date type, no time component)
+
+    WHY ISNEW():
+    Without ISNEW(), existing tasks with past due dates would be locked and
+    users could not update any other field without also fixing the due date.
+    ISNEW() restricts the rule to the insert path only.
+
+    ISNEW vs ISCHANGED:
+    ISNEW()              — true only on insert
+    ISCHANGED(field)     — true when a specific field value changed on update
+    PRIORVALUE(field)    — previous value of a field on update
+-->
+<ValidationRule xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Due_Date_Cannot_Be_Past</fullName>
+    <active>true</active>
+    <description>New tasks cannot be created with a Due Date in the past. Existing tasks are not affected.</description>
+    <errorConditionFormula>AND(
+    ISNEW(),
+    NOT(ISBLANK(Due_Date__c)),
+    Due_Date__c &lt; TODAY()
+)</errorConditionFormula>
+    <errorDisplayField>Due_Date__c</errorDisplayField>
+    <errorMessage>Due Date cannot be in the past for new tasks.</errorMessage>
+</ValidationRule>

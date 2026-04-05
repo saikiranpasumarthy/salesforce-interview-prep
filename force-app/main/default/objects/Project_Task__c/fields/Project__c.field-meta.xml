@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Project__c</fullName>
+    <label>Project</label>
+    <!-- type=MasterDetail creates the parent side of a Master-Detail relationship -->
+    <!-- writeRequiresMasterRead=false means users with Edit on the child need Read on parent -->
+    <referenceTo>Project__c</referenceTo>
+    <relationshipLabel>Project Tasks</relationshipLabel>
+    <relationshipName>Project_Tasks</relationshipName>
+    <!-- reparentableMasterDetail=false prevents changing the parent after insert -->
+    <reparentableMasterDetail>false</reparentableMasterDetail>
+    <required>false</required>
+    <trackFeedHistory>false</trackFeedHistory>
+    <trackHistory>false</trackHistory>
+    <type>MasterDetail</type>
+    <writeRequiresMasterRead>false</writeRequiresMasterRead>
+</CustomField>
