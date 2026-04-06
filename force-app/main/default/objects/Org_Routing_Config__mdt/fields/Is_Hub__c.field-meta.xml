@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Is_Hub__c</fullName>
+    <label>Is Hub</label>
+    <type>Checkbox</type>
+    <defaultValue>false</defaultValue>
+    <description>True if this record represents the hub org (source of truth). Hub routes are excluded from broadcastToAllSpokes fan-out — the hub is the sender, not a target.</description>
+</CustomField>

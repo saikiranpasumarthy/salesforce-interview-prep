@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomObject xmlns="http://soap.sforce.com/2006/04/metadata">
+    <label>Org Routing Config</label>
+    <pluralLabel>Org Routing Configs</pluralLabel>
+    <visibility>Public</visibility>
+    <description>Drives hub-spoke org routing in OrgTopologyService. Each record maps an SObject type to a Named Credential (target org) and the external ID field used for upsert matching. Add a record to onboard a new spoke without any code change.</description>
+</CustomObject>

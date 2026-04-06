@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Routing_Priority__c</fullName>
+    <label>Routing Priority</label>
+    <type>Number</type>
+    <precision>3</precision>
+    <scale>0</scale>
+    <description>Lower number = higher priority. getRoute() returns the single lowest-priority-number active route. Useful when multiple routes exist for the same object and a primary must be selected.</description>
+</CustomField>
