@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Config_Key__c</fullName>
+    <label>Config Key</label>
+    <type>Text</type>
+    <length>100</length>
+    <required>false</required>
+    <unique>false</unique>
+    <externalId>false</externalId>
+    <description>Key name for an arbitrary config value returned by getEnvironmentConfig(). Example: MAX_BATCH_SIZE, ENABLE_NOTIFICATIONS</description>
+</CustomField>
