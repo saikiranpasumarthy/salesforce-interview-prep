@@ -34,7 +34,7 @@ Senior Salesforce Developer | 9+ Years | Architect-Track Preparation
 | 23 | Multi-Org Architecture, Connected Apps, Org Strategy & Tenancy | Phase 2 | ✅ Done | [Day 23 →](docs/day-23.md) |
 | 24 | Performance Tuning & Scalability, Large Data Volumes, Skinny Tables | Phase 2 | ✅ Done | [Day 24 →](docs/day-24.md) |
 | 25 | Security Architecture, OAuth Flows, Shield & Event Monitoring | Phase 2 | ✅ Done | [Day 25 →](docs/day-25.md) |
-| 26 | Service Cloud Deep Dive, Case Management, Entitlements & Milestones | Phase 3 | ⬜ Pending | — |
+| 26 | Service Cloud Deep Dive, Case Management, Entitlements & Milestones | Phase 3 | ✅ Done | [Day 26 →](docs/day-26.md) |
 | 27 | Field Service Lightning, Work Orders & Scheduling, Mobile LWC for FSL | Phase 3 | ⬜ Pending | — |
 | 28 | Experience Cloud, CMS & Personalization, Guest User Security | Phase 3 | ⬜ Pending | — |
 | 29 | Sales Cloud & CPQ (Conga), Quote-to-Cash Lifecycle, Pricing & Approvals | Phase 3 | ⬜ Pending | — |
