@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    Integration_Event__e — Custom Platform Event
+    ══════════════════════════════════════════════════════════════════════════════
+    Platform Events are Salesforce's event-driven messaging backbone.
+    They implement the publish-subscribe (pub/sub) pattern.
+
+    PUBLISH BEHAVIOR OPTIONS:
+    ══════════════════════════
+    PublishAfterCommit (recommended):
+      • Events are published ONLY when the publishing transaction commits
+      • If the transaction rolls back (exception, DML error), NO event is sent
+      • Guarantees consistency: subscribers always see committed data
+      • Slightly higher latency (waits for commit)
+
+    PublishImmediately:
+      • Events are published as soon as EventBus.publish() is called
+      • Even if the publishing transaction rolls back, the event IS sent
+      • Use for audit/logging where you want to capture all attempts
+      • Lower latency; not tied to transaction outcome
+
+    EVENT TYPE OPTIONS:
+    ═══════════════════
+    StandardVolume (this object):
+      • Events retained for 72 hours (replay window)
+      • Max 250,000 events/hour across all Standard Volume events
+      • Subscribers can replay from any point within 72 hours using ReplayId
+      • Accessible via CometD, Apex triggers, Flows, LWC, External systems
+
+    HighVolume:
+      • No retention / replay (events not stored)
+      • Higher throughput (up to 500,000 events/hour)
+      • Accessible via Pub/Sub API (gRPC) only — not CometD
+      • Use for telemetry, IoT, high-frequency integrations
+
+    GOVERNOR LIMITS:
+    ════════════════
+    • Max 2,000 publish calls per transaction (single or bulk)
+    • Max 500,000 StandardVolume events published per hour per org
+    • Max 250,000 Platform Event trigger invocations per hour
+    • Events delivered to subscribers within seconds of commit
+-->
+<CustomObject xmlns="http://soap.sforce.com/2006/04/metadata">
+    <deploymentStatus>Deployed</deploymentStatus>
+    <description>General-purpose integration event for demonstrating Platform Events pub/sub patterns. Published after transaction commit to guarantee data consistency.</description>
+    <eventType>StandardVolume</eventType>
+    <label>Integration Event</label>
+    <pluralLabel>Integration Events</pluralLabel>
+    <publishBehavior>PublishAfterCommit</publishBehavior>
+</CustomObject>
