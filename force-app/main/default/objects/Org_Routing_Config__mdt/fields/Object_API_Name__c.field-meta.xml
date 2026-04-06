@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Object_API_Name__c</fullName>
+    <label>Object API Name</label>
+    <type>Text</type>
+    <length>80</length>
+    <description>API name of the SObject this route handles (e.g. Account, Contact). Used by OrgTopologyService to select the correct route for a sync operation.</description>
+</CustomField>
