@@ -36,7 +36,7 @@ Senior Salesforce Developer | 9+ Years | Architect-Track Preparation
 | 25 | Security Architecture, OAuth Flows, Shield & Event Monitoring | Phase 2 | ✅ Done | [Day 25 →](docs/day-25.md) |
 | 26 | Service Cloud Deep Dive, Case Management, Entitlements & Milestones | Phase 3 | ✅ Done | [Day 26 →](docs/day-26.md) |
 | 27 | Field Service Lightning, Work Orders & Scheduling, Mobile LWC for FSL | Phase 3 | ✅ Done | [Day 27 →](docs/day-27.md) |
-| 28 | Experience Cloud, CMS & Personalization, Guest User Security | Phase 3 | ⬜ Pending | — |
+| 28 | Experience Cloud, CMS & Personalization, Guest User Security | Phase 3 | ✅ Done | [Day 28 →](docs/day-28.md) |
 | 29 | Sales Cloud & CPQ (Conga), Quote-to-Cash Lifecycle, Pricing & Approvals | Phase 3 | ⬜ Pending | — |
 | 30 | Agentforce Architecture, Agent Actions & Topics, Prompt Templates | Phase 3 | ⬜ Pending | — |
 | 31 | Agentforce Deep Dive, Custom Actions via Apex, Einstein Copilot | Phase 3 | ⬜ Pending | — |
