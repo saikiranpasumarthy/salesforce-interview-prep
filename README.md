@@ -39,7 +39,7 @@ Senior Salesforce Developer | 9+ Years | Architect-Track Preparation
 | 28 | Experience Cloud, CMS & Personalization, Guest User Security | Phase 3 | ✅ Done | [Day 28 →](docs/day-28.md) |
 | 29 | Sales Cloud & CPQ (Conga), Quote-to-Cash Lifecycle, Pricing & Approvals | Phase 3 | ✅ Done | [Day 29 →](docs/day-29.md) |
 | 30 | Agentforce Architecture, Agent Actions & Topics, Prompt Templates | Phase 3 | ✅ Done | [Day 30 →](docs/day-30.md) |
-| 31 | Agentforce Deep Dive, Custom Actions via Apex, Einstein Copilot | Phase 3 | ⬜ Pending | — |
+| 31 | Agentforce Deep Dive, Custom Actions via Apex, Einstein Copilot | Phase 3 | ✅ Done | [Day 31 →](docs/day-31.md) |
 | 32 | Data Cloud Architecture, Data Streams & Ingestion, Unified Profiles | Phase 3 | ⬜ Pending | — |
 | 33 | Data Cloud Segmentation, Real-Time CDP, Data Cloud + Apex | Phase 3 | ⬜ Pending | — |
 | 34 | Einstein Features & AI in Apex, Prediction Builder, AI-Powered Flows | Phase 3 | ⬜ Pending | — |
