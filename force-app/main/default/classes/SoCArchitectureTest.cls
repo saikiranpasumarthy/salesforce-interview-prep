@@ -41,13 +41,11 @@ private class SoCArchitectureTest {
         public List<SObject> deletedRecords = new List<SObject>();
         public Boolean       commitCalled   = false;
 
-        public void registerNew(SObject r)                                      { newRecords.add(r); }
-        public void registerNew(SObject r, Schema.SObjectField f, SObject p)    { newRecords.add(r); }
-        public void registerDirty(SObject r)                                    { dirtyRecords.add(r); }
-        public void registerDirty(SObject r, List<Schema.SObjectField> fields)  { dirtyRecords.add(r); }
-        public void registerDeleted(SObject r)                                  { deletedRecords.add(r); }
-        public void registerEmptyRecycleBin(SObject r)                          {}
-        public void commitWork()                                                 { commitCalled = true; }
+        public void registerNew(SObject r)                                   { newRecords.add(r); }
+        public void registerNew(SObject r, Schema.SObjectField f, SObject p) { newRecords.add(r); }
+        public void registerDirty(SObject r)                                 { dirtyRecords.add(r); }
+        public void registerDeleted(SObject r)                               { deletedRecords.add(r); }
+        public void commitWork()                                             { commitCalled = true; }
     }
 
     /** Returns controlled Account data without hitting DB */
