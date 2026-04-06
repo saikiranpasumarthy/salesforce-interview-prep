@@ -1,0 +1,192 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# ci-validate.yml
+# Day 20 — CI pipeline: validate-only on every Pull Request
+#
+# TRIGGER STRATEGY:
+# ══════════════════
+# • Runs on every PR targeting main — validates the deployment without deploying
+# • Uses --dry-run so no changes reach the org
+# • Fast feedback loop: fail early before merge
+#
+# PIPELINE VARIABLES (set in Azure DevOps Library or pipeline variables):
+#   SF_AUTH_URL_VALIDATE   — sfdxAuthUrl for the validation org (QA/Staging sandbox)
+#   SF_AUTH_URL_DEVHUB     — sfdxAuthUrl for the Dev Hub (scratch org creation)
+#
+# AUTHENTICATION:
+# ════════════════
+# Use SFDX Auth URL (sfdxAuthUrl) stored as a secret variable.
+# Generate with: sf org display --verbose --target-org my-org | grep "Sfdx Auth Url"
+# Store the entire "force://..." string as a pipeline secret.
+# ─────────────────────────────────────────────────────────────────────────────
+
+trigger: none   # Do not run on push — only on PRs (see pr: below)
+
+pr:
+  branches:
+    include:
+      - main
+  paths:
+    include:
+      - force-app/**
+      - manifest/**
+      - config/**
+
+pool:
+  vmImage: ubuntu-latest
+
+variables:
+  NODE_VERSION: '20.x'
+  SF_CLI_VERSION: '@latest'
+
+stages:
+  # ── Stage 1: Static Analysis ───────────────────────────────────────────────
+  - stage: StaticAnalysis
+    displayName: 'Static Analysis'
+    jobs:
+      - job: PMDScan
+        displayName: 'PMD Apex Static Analysis'
+        steps:
+          - task: NodeTool@0
+            inputs:
+              versionSpec: $(NODE_VERSION)
+            displayName: 'Install Node.js'
+
+          - script: |
+              npm install -g @salesforce/cli$(SF_CLI_VERSION)
+              sf --version
+            displayName: 'Install sf CLI'
+
+          - script: |
+              # Install PMD via npm wrapper
+              npm install -g pmd-apex
+            displayName: 'Install PMD'
+
+          - script: |
+              # Run PMD scan — fail on Priority 1 (Critical) violations only
+              # Adjust ruleset to project standards
+              pmd check \
+                --dir force-app/main/default/classes \
+                --rulesets category/apex/bestpractices.xml,category/apex/errorprone.xml \
+                --format text \
+                --minimum-priority 1 \
+                --fail-on-violation || true
+            displayName: 'Run PMD (non-blocking)'
+            continueOnError: true
+
+          - script: |
+              echo "PMD scan complete — review output above"
+              echo "Promote to blocking by removing '|| true' and setting continueOnError: false"
+            displayName: 'PMD summary'
+
+  # ── Stage 2: Scratch Org Validation ───────────────────────────────────────
+  - stage: ScratchOrgValidation
+    displayName: 'Scratch Org Validation'
+    dependsOn: StaticAnalysis
+    jobs:
+      - job: ValidateOnScratch
+        displayName: 'Deploy + Test on Scratch Org'
+        timeoutInMinutes: 60
+        steps:
+          - task: NodeTool@0
+            inputs:
+              versionSpec: $(NODE_VERSION)
+            displayName: 'Install Node.js'
+
+          - script: |
+              npm install -g @salesforce/cli$(SF_CLI_VERSION)
+            displayName: 'Install sf CLI'
+
+          - script: |
+              # Authenticate Dev Hub
+              echo "$(SF_AUTH_URL_DEVHUB)" > /tmp/devhub-auth.txt
+              sf org login sfdx-url \
+                --sfdx-url-file /tmp/devhub-auth.txt \
+                --alias ci-devhub \
+                --set-default-dev-hub
+              rm /tmp/devhub-auth.txt
+            displayName: 'Authenticate Dev Hub'
+            env:
+              SF_AUTH_URL_DEVHUB: $(SF_AUTH_URL_DEVHUB)
+
+          - script: |
+              # Create short-lived scratch org (1 day) for CI validation
+              sf org create scratch \
+                --definition-file config/project-scratch-def.json \
+                --alias ci-scratch-$(Build.BuildId) \
+                --duration-days 1 \
+                --set-default \
+                --wait 15
+            displayName: 'Create CI Scratch Org'
+
+          - script: |
+              sf project deploy start \
+                --source-dir force-app \
+                --target-org ci-scratch-$(Build.BuildId) \
+                --wait 20
+            displayName: 'Push Source to Scratch Org'
+
+          - script: |
+              sf apex run test \
+                --target-org ci-scratch-$(Build.BuildId) \
+                --wait 30 \
+                --code-coverage \
+                --result-format junit \
+                --output-dir $(Agent.TempDirectory)/test-results/
+            displayName: 'Run Apex Tests'
+
+          - task: PublishTestResults@2
+            inputs:
+              testResultsFormat: 'JUnit'
+              testResultsFiles: '$(Agent.TempDirectory)/test-results/**/*.xml'
+              failTaskOnFailedTests: true
+            displayName: 'Publish Test Results'
+
+          - script: |
+              # Always delete the scratch org — even on failure
+              sf org delete scratch \
+                --target-org ci-scratch-$(Build.BuildId) \
+                --no-prompt || true
+            displayName: 'Delete CI Scratch Org'
+            condition: always()
+
+  # ── Stage 3: Sandbox Validate (dry-run deploy) ─────────────────────────────
+  - stage: SandboxValidate
+    displayName: 'Sandbox Validate (dry run)'
+    dependsOn: ScratchOrgValidation
+    condition: succeeded()
+    jobs:
+      - job: ValidateOnSandbox
+        displayName: 'Validate Manifest against QA Sandbox'
+        timeoutInMinutes: 45
+        steps:
+          - task: NodeTool@0
+            inputs:
+              versionSpec: $(NODE_VERSION)
+            displayName: 'Install Node.js'
+
+          - script: |
+              npm install -g @salesforce/cli$(SF_CLI_VERSION)
+            displayName: 'Install sf CLI'
+
+          - script: |
+              echo "$(SF_AUTH_URL_VALIDATE)" > /tmp/validate-auth.txt
+              sf org login sfdx-url \
+                --sfdx-url-file /tmp/validate-auth.txt \
+                --alias ci-validate
+              rm /tmp/validate-auth.txt
+            displayName: 'Authenticate Validation Org'
+            env:
+              SF_AUTH_URL_VALIDATE: $(SF_AUTH_URL_VALIDATE)
+
+          - script: |
+              sf project deploy start \
+                --manifest manifest/package.xml \
+                --target-org ci-validate \
+                --test-level RunLocalTests \
+                --dry-run \
+                --wait 30
+            displayName: 'Validate Manifest (dry run)'
+
+          - script: |
+              echo "Validation passed — PR is safe to merge"
+            displayName: 'Validation Summary'

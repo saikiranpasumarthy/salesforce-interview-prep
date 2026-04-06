@@ -1,0 +1,99 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# package-release.yml
+# Day 20 — Unlocked Package version creation and release pipeline
+#
+# TRIGGER:
+# ═════════
+# Manual trigger (workflow_dispatch equivalent in Azure DevOps).
+# Run this pipeline when you want to create a new package version.
+#
+# PIPELINE VARIABLES:
+#   SF_AUTH_URL_DEVHUB      — Dev Hub sfdxAuthUrl
+#   PACKAGE_INSTALL_KEY     — Installation key for the new version (optional)
+#   PROMOTE_VERSION         — true/false — whether to promote to released
+# ─────────────────────────────────────────────────────────────────────────────
+
+trigger: none   # Manual only
+pr:    none
+
+pool:
+  vmImage: ubuntu-latest
+
+variables:
+  NODE_VERSION: '20.x'
+  PROMOTE_VERSION: false
+
+parameters:
+  - name: promoteVersion
+    displayName: 'Promote to released? (WARNING: irreversible)'
+    type: boolean
+    default: false
+
+stages:
+  - stage: CreateVersion
+    displayName: 'Create Package Version'
+    jobs:
+      - job: PackageVersionCreate
+        displayName: 'sf package version create'
+        timeoutInMinutes: 90
+        steps:
+          - checkout: self
+
+          - task: NodeTool@0
+            inputs:
+              versionSpec: $(NODE_VERSION)
+            displayName: 'Install Node.js'
+
+          - script: |
+              npm install -g @salesforce/cli@latest
+            displayName: 'Install sf CLI'
+
+          - script: |
+              echo "$(SF_AUTH_URL_DEVHUB)" > /tmp/devhub.txt
+              sf org login sfdx-url \
+                --sfdx-url-file /tmp/devhub.txt \
+                --alias ci-devhub \
+                --set-default-dev-hub
+              rm /tmp/devhub.txt
+            displayName: 'Authenticate Dev Hub'
+            env:
+              SF_AUTH_URL_DEVHUB: $(SF_AUTH_URL_DEVHUB)
+
+          - script: |
+              # Create a new beta package version with code coverage
+              sf package version create \
+                --package salesforce-interview-prep \
+                --definition-file config/project-scratch-def.json \
+                --target-dev-hub ci-devhub \
+                --code-coverage \
+                --installation-key-bypass \
+                --wait 60
+            displayName: 'Create Package Version'
+
+          - script: |
+              # List all versions to confirm creation
+              sf package version list \
+                --package salesforce-interview-prep \
+                --target-dev-hub ci-devhub \
+                --order-by CreatedDate \
+                --released false
+            displayName: 'List Package Versions'
+
+  - stage: PromoteVersion
+    displayName: 'Promote to Released'
+    dependsOn: CreateVersion
+    condition: and(succeeded(), eq('${{ parameters.promoteVersion }}', 'true'))
+    jobs:
+      - deployment: PromotePackage
+        displayName: 'Promote Package Version'
+        environment: 'PackagePromotion'
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - script: |
+                    echo "Promoting latest beta version to released..."
+                    echo "Get the 04t ID from the CreateVersion stage output and pass it here."
+                    echo "Example:"
+                    echo "  sf package version promote --package 04tXXX --target-dev-hub ci-devhub"
+                  displayName: 'Promote Version (manual step)'

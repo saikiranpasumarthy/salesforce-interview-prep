@@ -1,0 +1,275 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# cd-deploy.yml
+# Day 20 — CD pipeline: deploy to QA → Staging → Production
+#
+# TRIGGER STRATEGY:
+# ══════════════════
+# • Triggered on push to main (after PR merge)
+# • Uses delta deployment via sfdx-git-delta — only changed components
+# • Multi-stage with approval gates between Staging → Production
+#
+# PIPELINE VARIABLES (set in Azure DevOps Library):
+#   SF_AUTH_URL_QA          — sfdxAuthUrl for QA sandbox
+#   SF_AUTH_URL_STAGING     — sfdxAuthUrl for Staging sandbox
+#   SF_AUTH_URL_PRODUCTION  — sfdxAuthUrl for Production org
+#   LAST_DEPLOY_TAG         — git tag of the last successful production deploy
+#                             Update this after each successful production deploy
+#                             e.g. "v1.18.0" — set in pipeline or variable group
+#
+# DELTA DEPLOYMENT:
+# ══════════════════
+# sfdx-git-delta computes the diff between LAST_DEPLOY_TAG and HEAD,
+# generating a package.xml with only changed components.
+# This makes production deploys fast and predictable.
+# ─────────────────────────────────────────────────────────────────────────────
+
+trigger:
+  branches:
+    include:
+      - main
+  paths:
+    include:
+      - force-app/**
+      - manifest/**
+
+pr: none   # CI pipeline handles PRs; this handles merges to main
+
+pool:
+  vmImage: ubuntu-latest
+
+variables:
+  NODE_VERSION: '20.x'
+  SF_CLI_VERSION: '@latest'
+  SGD_VERSION: '@latest'
+
+stages:
+  # ── Stage 1: Generate Delta Manifest ──────────────────────────────────────
+  - stage: GenerateDelta
+    displayName: 'Generate Delta Manifest'
+    jobs:
+      - job: DeltaManifest
+        displayName: 'sfdx-git-delta'
+        steps:
+          - checkout: self
+            fetchDepth: 0   # Full history needed for git diff
+
+          - task: NodeTool@0
+            inputs:
+              versionSpec: $(NODE_VERSION)
+            displayName: 'Install Node.js'
+
+          - script: |
+              npm install -g @salesforce/cli$(SF_CLI_VERSION)
+              npm install -g sfdx-git-delta$(SGD_VERSION)
+              sgd --version
+            displayName: 'Install Tools'
+
+          - script: |
+              # Generate delta package between last deploy tag and HEAD
+              mkdir -p delta/
+              sgd \
+                --from "$(LAST_DEPLOY_TAG)" \
+                --to   "HEAD" \
+                --repo "." \
+                --output "delta/" \
+                --generate-delta
+
+              echo "=== Delta package.xml ==="
+              cat delta/package/package.xml || echo "(empty — no Salesforce changes)"
+
+              echo "=== Destructive changes ==="
+              cat delta/destructiveChanges/destructiveChanges.xml 2>/dev/null || echo "(none)"
+            displayName: 'Generate Delta'
+
+          - publish: delta/
+            artifact: DeltaManifest
+            displayName: 'Publish Delta Artifact'
+
+  # ── Stage 2: Deploy to QA ──────────────────────────────────────────────────
+  - stage: DeployQA
+    displayName: 'Deploy to QA Sandbox'
+    dependsOn: GenerateDelta
+    condition: succeeded()
+    jobs:
+      - deployment: DeployToQA
+        displayName: 'Deploy QA'
+        environment: 'QA'   # Define in Azure DevOps Environments for approval gates
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - task: NodeTool@0
+                  inputs:
+                    versionSpec: $(NODE_VERSION)
+                  displayName: 'Install Node.js'
+
+                - script: |
+                    npm install -g @salesforce/cli$(SF_CLI_VERSION)
+                  displayName: 'Install sf CLI'
+
+                - script: |
+                    echo "$(SF_AUTH_URL_QA)" > /tmp/qa-auth.txt
+                    sf org login sfdx-url \
+                      --sfdx-url-file /tmp/qa-auth.txt \
+                      --alias ci-qa
+                    rm /tmp/qa-auth.txt
+                  displayName: 'Authenticate QA'
+                  env:
+                    SF_AUTH_URL_QA: $(SF_AUTH_URL_QA)
+
+                - download: current
+                  artifact: DeltaManifest
+
+                - script: |
+                    DELTA_PKG="$(Pipeline.Workspace)/DeltaManifest/package/package.xml"
+                    DEST_PKG="$(Pipeline.Workspace)/DeltaManifest/destructiveChanges/destructiveChanges.xml"
+
+                    # Deploy delta changes
+                    sf project deploy start \
+                      --manifest "$DELTA_PKG" \
+                      --target-org ci-qa \
+                      --test-level RunLocalTests \
+                      --wait 30
+
+                    # Apply destructive changes if present
+                    if [[ -f "$DEST_PKG" ]]; then
+                      echo "Applying destructive changes..."
+                      sf project deploy start \
+                        --manifest "$DEST_PKG" \
+                        --target-org ci-qa \
+                        --wait 15
+                    fi
+                  displayName: 'Deploy Delta to QA'
+
+                - script: |
+                    sf apex run test \
+                      --target-org ci-qa \
+                      --wait 30 \
+                      --code-coverage \
+                      --result-format junit \
+                      --output-dir $(Agent.TempDirectory)/qa-tests/
+                  displayName: 'Run Tests in QA'
+
+                - task: PublishTestResults@2
+                  inputs:
+                    testResultsFormat: 'JUnit'
+                    testResultsFiles: '$(Agent.TempDirectory)/qa-tests/**/*.xml'
+                    testRunTitle: 'QA Test Run'
+                    failTaskOnFailedTests: true
+                  displayName: 'Publish QA Test Results'
+
+  # ── Stage 3: Deploy to Staging (with approval gate) ───────────────────────
+  - stage: DeployStaging
+    displayName: 'Deploy to Staging (Approval Required)'
+    dependsOn: DeployQA
+    condition: succeeded()
+    jobs:
+      - deployment: DeployToStaging
+        displayName: 'Deploy Staging'
+        environment: 'Staging'   # Configure approval gate in Azure DevOps
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - task: NodeTool@0
+                  inputs:
+                    versionSpec: $(NODE_VERSION)
+                  displayName: 'Install Node.js'
+
+                - script: |
+                    npm install -g @salesforce/cli$(SF_CLI_VERSION)
+                  displayName: 'Install sf CLI'
+
+                - script: |
+                    echo "$(SF_AUTH_URL_STAGING)" > /tmp/staging-auth.txt
+                    sf org login sfdx-url \
+                      --sfdx-url-file /tmp/staging-auth.txt \
+                      --alias ci-staging
+                    rm /tmp/staging-auth.txt
+                  displayName: 'Authenticate Staging'
+                  env:
+                    SF_AUTH_URL_STAGING: $(SF_AUTH_URL_STAGING)
+
+                - download: current
+                  artifact: DeltaManifest
+
+                - script: |
+                    sf project deploy start \
+                      --manifest "$(Pipeline.Workspace)/DeltaManifest/package/package.xml" \
+                      --target-org ci-staging \
+                      --test-level RunLocalTests \
+                      --wait 30
+                  displayName: 'Deploy Delta to Staging'
+
+                - script: |
+                    sf apex run test \
+                      --target-org ci-staging \
+                      --wait 30 \
+                      --code-coverage \
+                      --result-format junit \
+                      --output-dir $(Agent.TempDirectory)/staging-tests/
+                  displayName: 'Run Tests in Staging'
+
+                - task: PublishTestResults@2
+                  inputs:
+                    testResultsFormat: 'JUnit'
+                    testResultsFiles: '$(Agent.TempDirectory)/staging-tests/**/*.xml'
+                    testRunTitle: 'Staging Test Run'
+                    failTaskOnFailedTests: true
+                  displayName: 'Publish Staging Test Results'
+
+  # ── Stage 4: Deploy to Production (with approval gate + tag) ──────────────
+  - stage: DeployProduction
+    displayName: 'Deploy to Production (Approval Required)'
+    dependsOn: DeployStaging
+    condition: succeeded()
+    jobs:
+      - deployment: DeployToProd
+        displayName: 'Deploy Production'
+        environment: 'Production'   # Require multiple approvers here
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - checkout: self
+
+                - task: NodeTool@0
+                  inputs:
+                    versionSpec: $(NODE_VERSION)
+                  displayName: 'Install Node.js'
+
+                - script: |
+                    npm install -g @salesforce/cli$(SF_CLI_VERSION)
+                  displayName: 'Install sf CLI'
+
+                - script: |
+                    echo "$(SF_AUTH_URL_PRODUCTION)" > /tmp/prod-auth.txt
+                    sf org login sfdx-url \
+                      --sfdx-url-file /tmp/prod-auth.txt \
+                      --alias ci-prod
+                    rm /tmp/prod-auth.txt
+                  displayName: 'Authenticate Production'
+                  env:
+                    SF_AUTH_URL_PRODUCTION: $(SF_AUTH_URL_PRODUCTION)
+
+                - download: current
+                  artifact: DeltaManifest
+
+                - script: |
+                    # Production requires RunLocalTests — never NoTestRun
+                    sf project deploy start \
+                      --manifest "$(Pipeline.Workspace)/DeltaManifest/package/package.xml" \
+                      --target-org ci-prod \
+                      --test-level RunLocalTests \
+                      --wait 60
+                  displayName: 'Deploy Delta to Production'
+
+                - script: |
+                    # Tag the successful production deploy for next delta baseline
+                    DEPLOY_TAG="v$(Build.BuildNumber)"
+                    git config user.email "ci@salesforce-interview-prep.com"
+                    git config user.name "Azure DevOps CI"
+                    git tag -a "$DEPLOY_TAG" -m "Production deploy: build $(Build.BuildId)"
+                    git push origin "$DEPLOY_TAG"
+                    echo "Tagged: $DEPLOY_TAG — use this as LAST_DEPLOY_TAG for next run"
+                  displayName: 'Tag Successful Deploy'
