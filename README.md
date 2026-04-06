@@ -30,7 +30,7 @@ Senior Salesforce Developer | 9+ Years | Architect-Track Preparation
 | 19 | DevOps: sf CLI & Scratch Orgs, Unlocked Packages, Manifest Deployments | Phase 2 | ✅ Done | [Day 19 →](docs/day-19.md) |
 | 20 | CI/CD with Azure DevOps, Delta Deployments, Automated Test Execution | Phase 2 | ✅ Done | [Day 20 →](docs/day-20.md) |
 | 21 | Metadata API & Tooling API, SFDX Project Structure, Environment Strategy | Phase 2 | ✅ Done | [Day 21 →](docs/day-21.md) |
-| 22 | Separation of Concerns (Architecture), fflib Enterprise Patterns, DI | Phase 2 | ⬜ Pending | — |
+| 22 | Separation of Concerns (Architecture), fflib Enterprise Patterns, DI | Phase 2 | ✅ Done | [Day 22 →](docs/day-22.md) |
 | 23 | Multi-Org Architecture, Connected Apps, Org Strategy & Tenancy | Phase 2 | ⬜ Pending | — |
 | 24 | Performance Tuning & Scalability, Large Data Volumes, Skinny Tables | Phase 2 | ⬜ Pending | — |
 | 25 | Security Architecture, OAuth Flows, Shield & Event Monitoring | Phase 2 | ⬜ Pending | — |

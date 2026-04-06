@@ -164,6 +164,104 @@ public with sharing class AccountService {
         logSaveResultErrors(results, 'AccountService.syncCaseOwnerOnAccountOwnerChange');
     }
 
+    // ─── Day 22: SoC / DI Service Methods ────────────────────────────────────
+    // The methods below use the Application factory for Selector + UoW injection,
+    // enabling clean unit testing without database hits.
+
+    /**
+     * Marks accounts as Pending sync and publishes a Platform Event for each.
+     * Demonstrates: Selector → filter → UoW registerDirty → commitWork → publish.
+     */
+    public static void markForSync(Set<Id> accountIds) {
+        if (accountIds == null || accountIds.isEmpty()) { return; }
+        IAccountSelector selector =
+            (IAccountSelector) Application.Selector.newInstance(IAccountSelector.class);
+        IUnitOfWork uow = Application.UnitOfWork.newInstance();
+
+        List<Account> accounts = selector.selectById(accountIds);
+        List<Integration_Event__e> events = new List<Integration_Event__e>();
+        for (Account acc : accounts) {
+            if (acc.Sync_Status__c != 'Pending') {
+                uow.registerDirty(new Account(Id = acc.Id, Sync_Status__c = 'Pending'));
+                events.add(PlatformEventService.accountSyncEvent(acc.Id, 'MARK_SYNC'));
+            }
+        }
+        uow.commitWork();
+        if (!events.isEmpty()) { PlatformEventService.publishBulk(events); }
+    }
+
+    /** Records a sync failure: sets Sync_Status__c=Failed and stores the error message. */
+    public static void recordSyncFailure(Id accountId, String errorMessage) {
+        if (accountId == null) { return; }
+        IUnitOfWork uow = Application.UnitOfWork.newInstance();
+        uow.registerDirty(new Account(
+            Id             = accountId,
+            Sync_Status__c = 'Failed',
+            Sync_Error__c  = errorMessage != null ? errorMessage.left(255) : 'Unknown error'
+        ));
+        uow.commitWork();
+    }
+
+    /**
+     * Bulk-creates Accounts with related Contacts via UoW relationship resolution.
+     * Demonstrates parent-child INSERT without managing parent IDs manually.
+     */
+    public static List<Id> createAccountsWithContacts(
+            List<AccountWithContactsDto> dtos) {
+        if (dtos == null || dtos.isEmpty()) { return new List<Id>(); }
+        IUnitOfWork uow = Application.UnitOfWork.newInstance();
+        List<Account> newAccounts = new List<Account>();
+        for (AccountWithContactsDto dto : dtos) {
+            Account acc = new Account(
+                Name           = dto.accountName,
+                Type           = dto.accountType,
+                Sync_Status__c = 'Pending'
+            );
+            uow.registerNew(acc);
+            newAccounts.add(acc);
+            if (dto.contacts != null) {
+                for (ContactDto cDto : dto.contacts) {
+                    uow.registerNew(
+                        new Contact(FirstName = cDto.firstName,
+                                    LastName  = cDto.lastName,
+                                    Email     = cDto.email),
+                        Contact.AccountId, acc
+                    );
+                }
+            }
+        }
+        uow.commitWork();
+        List<Id> ids = new List<Id>();
+        for (Account acc : newAccounts) { ids.add(acc.Id); }
+        return ids;
+    }
+
+    /** Returns accounts grouped by Type, with their open Opportunities. */
+    public static Map<String, List<Account>> getAccountsByTypeWithOpps(Set<Id> accountIds) {
+        IAccountSelector selector =
+            (IAccountSelector) Application.Selector.newInstance(IAccountSelector.class);
+        List<Account> accounts = selector.selectWithOpenOpportunities(accountIds);
+        Map<String, List<Account>> grouped = new Map<String, List<Account>>();
+        for (Account acc : accounts) {
+            String type = String.isBlank(acc.Type) ? 'Unknown' : acc.Type;
+            if (!grouped.containsKey(type)) { grouped.put(type, new List<Account>()); }
+            grouped.get(type).add(acc);
+        }
+        return grouped;
+    }
+
+    // DTOs for createAccountsWithContacts
+    public class AccountWithContactsDto {
+        public String accountName;
+        public String accountType;
+        public List<ContactDto> contacts;
+    }
+    public class ContactDto {
+        public String firstName;
+        public String lastName;
+        public String email;
+    }
+
     // ─── Private Helpers ──────────────────────────────────────────────────────
 
     /**
