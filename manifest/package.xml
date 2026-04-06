@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  package.xml — Full project deployment manifest
+  Day 19: Manifest-based deployments with sf project deploy start ‑‑manifest
+
+  Usage:
+    sf project deploy start --manifest manifest/package.xml --target-org <alias>
+
+  Notes:
+  • Wildcards (*) deploy ALL members of a type — use named lists in CI/CD
+    to avoid deploying unintended metadata.
+  • CustomObject includes the object container AND all fields/validations
+    within the same directory when used with source-format metadata.
+  • For delta deployments, use sfdx-git-delta (sgd) to generate a
+    manifest containing only changed components since the last tag.
+-->
+<Package xmlns="http://soap.sforce.com/2006/04/metadata">
+    <version>62.0</version>
+
+    <!-- ── Apex ────────────────────────────────────────────────────────── -->
+    <types>
+        <members>AccountService</members>
+        <members>AdminFundamentalsTest</members>
+        <members>AsyncCalloutService</members>
+        <members>AuditService</members>
+        <members>CalloutAsyncTest</members>
+        <members>CalloutMocks</members>
+        <members>CdcEventHandler</members>
+        <members>DevOpsUtility</members>
+        <members>DevOpsUtilityTest</members>
+        <members>ExternalApiClient</members>
+        <members>FlowInvocable</members>
+        <members>JwtTokenService</members>
+        <members>MetadataInspector</members>
+        <members>OrgConfigService</members>
+        <members>OrgConfigServiceTest</members>
+        <members>OutboundMessageHandler</members>
+        <members>PlatformEventService</members>
+        <members>PlatformEventTest</members>
+        <members>ReportService</members>
+        <members>RestIntegrationTest</members>
+        <members>SecurityService</members>
+        <members>SecurityModelTest</members>
+        <members>SoapApiService</members>
+        <name>ApexClass</name>
+    </types>
+
+    <!-- ── Apex Triggers ────────────────────────────────────────────────── -->
+    <types>
+        <members>AccountChangeTrigger</members>
+        <members>AccountTrigger</members>
+        <members>IntegrationEventTrigger</members>
+        <name>ApexTrigger</name>
+    </types>
+
+    <!-- ── Custom Objects ────────────────────────────────────────────────── -->
+    <types>
+        <members>Project__c</members>
+        <members>Project_Task__c</members>
+        <name>CustomObject</name>
+    </types>
+
+    <!-- ── Platform Events ───────────────────────────────────────────────── -->
+    <types>
+        <members>Integration_Event__e</members>
+        <name>CustomObject</name>
+    </types>
+
+    <!-- ── Custom Fields (on standard objects) ──────────────────────────── -->
+    <types>
+        <members>Account.Sync_Status__c</members>
+        <members>Account.Sync_Error__c</members>
+        <name>CustomField</name>
+    </types>
+
+    <!-- ── Validation Rules ──────────────────────────────────────────────── -->
+    <types>
+        <members>Project_Task__c.High_Priority_Requires_Due_Date</members>
+        <members>Project_Task__c.Effort_Days_Valid_Range</members>
+        <members>Project_Task__c.Due_Date_Cannot_Be_Past</members>
+        <name>ValidationRule</name>
+    </types>
+
+    <!-- ── Named Credentials ─────────────────────────────────────────────── -->
+    <types>
+        <members>Demo_External_API</members>
+        <members>Demo_OAuth_API</members>
+        <name>NamedCredential</name>
+    </types>
+
+    <!-- ── LWC ───────────────────────────────────────────────────────────── -->
+    <types>
+        <members>*</members>
+        <name>LightningComponentBundle</name>
+    </types>
+
+    <!-- ── Flows ─────────────────────────────────────────────────────────── -->
+    <types>
+        <members>*</members>
+        <name>Flow</name>
+    </types>
+
+    <!-- ── Permission Sets ───────────────────────────────────────────────── -->
+    <types>
+        <members>*</members>
+        <name>PermissionSet</name>
+    </types>
+</Package>

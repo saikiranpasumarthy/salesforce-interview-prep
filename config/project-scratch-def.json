@@ -1,13 +1,24 @@
 {
-  "orgName": "saikiranpasumarthy company",
+  "orgName": "Interview Prep — Dev Scratch",
   "edition": "Developer",
-  "features": ["EnableSetPasswordInApi"],
+  "features": [
+    "EnableSetPasswordInApi",
+    "ChangeDataCapture",
+    "PlatformEvents",
+    "Unlocked Packages"
+  ],
   "settings": {
     "lightningExperienceSettings": {
       "enableS1DesktopEnabled": true
     },
     "mobileSettings": {
       "enableS1EncryptedStoragePref2": false
+    },
+    "apexSettings": {
+      "enableAggregateCodeCoverageOnly": false
     }
-  }
+  },
+  "snapshot": "",
+  "sourceTracking": true,
+  "hasSampleData": false
 }
