@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Api_Endpoint__c</fullName>
+    <label>API Endpoint</label>
+    <type>Url</type>
+    <required>false</required>
+    <description>Base URL for the external API in this environment. Overrides the default hardcoded fallback in EnvironmentService.</description>
+</CustomField>
