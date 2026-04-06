@@ -1,0 +1,40 @@
+{
+  "orgName": "Interview Prep — Full Feature Scratch",
+  "edition": "Developer",
+  "features": [
+    "EnableSetPasswordInApi",
+    "ChangeDataCapture",
+    "PlatformEvents",
+    "Unlocked Packages",
+    "Communities",
+    "ServiceCloud",
+    "SalesCloud"
+  ],
+  "settings": {
+    "lightningExperienceSettings": {
+      "enableS1DesktopEnabled": true
+    },
+    "mobileSettings": {
+      "enableS1EncryptedStoragePref2": false
+    },
+    "apexSettings": {
+      "enableAggregateCodeCoverageOnly": false
+    },
+    "caseSettings": {
+      "enableCaseFeed": true
+    },
+    "chatterSettings": {
+      "enableChatter": true
+    },
+    "flowSettings": {
+      "enableFlowUseApexExceptionEmail": true
+    },
+    "emailAdministrationSettings": {
+      "enableEnhancedEmailEnabled": true
+    }
+  },
+  "snapshot": "",
+  "sourceTracking": true,
+  "hasSampleData": false,
+  "description": "Full-feature scratch org for Phase 2/3 days covering Service Cloud, Communities, and advanced features"
+}

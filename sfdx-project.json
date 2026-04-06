@@ -2,11 +2,20 @@
   "packageDirectories": [
     {
       "path": "force-app",
-      "default": true
+      "default": true,
+      "package": "salesforce-interview-prep",
+      "versionName": "Spring 2026",
+      "versionNumber": "1.19.0.NEXT",
+      "versionDescription": "Day 1–19: Apex, LWC, Flows, Security, Integrations, Platform Events, DevOps",
+      "definitionFile": "config/project-scratch-def.json",
+      "ancestorId": "HIGHEST"
     }
   ],
   "name": "salesforce-interview-prep",
   "namespace": "",
   "sfdcLoginUrl": "https://login.salesforce.com",
-  "sourceApiVersion": "62.0"
+  "sourceApiVersion": "62.0",
+  "packageAliases": {
+    "salesforce-interview-prep": "0Ho000000000000AAA"
+  }
 }
