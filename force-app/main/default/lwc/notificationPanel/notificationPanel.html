@@ -1,0 +1,68 @@
+<!-- Day 39 — notificationPanel: LMS subscriber + publisher demo -->
+<template>
+    <lightning-card title="Notification Panel — LMS Demo" icon-name="utility:connected_apps">
+
+        <!-- Error state -->
+        <template if:true={hasError}>
+            <div class="slds-notify slds-notify_alert slds-alert_error" role="alert">
+                <span class="slds-assistive-text">Error</span>
+                {errorMessage}
+            </div>
+        </template>
+
+        <!-- LMS received message -->
+        <template if:true={hasSelection}>
+            <div class="slds-box slds-theme_success slds-m-around_small">
+                <lightning-icon icon-name="utility:check" size="x-small"></lightning-icon>
+                &nbsp;Selected via LMS: <strong>{selectedRecordLabel}</strong>
+                &nbsp;(Id: {selectedRecord.id})
+            </div>
+        </template>
+
+        <!-- Account list (publishes to LMS on click) -->
+        <template if:true={hasAccounts}>
+            <ul class="slds-m-around_small">
+                <template for:each={pagedAccounts} for:item="acc">
+                    <li key={acc.Id}
+                        class="slds-item slds-p-vertical_xx-small"
+                        data-id={acc.Id}
+                        data-name={acc.Name}
+                        onclick={handleAccountClick}
+                        style="cursor:pointer;">
+                        <lightning-icon icon-name="standard:account" size="x-small"></lightning-icon>
+                        &nbsp;{acc.Name}
+                        <span class="slds-badge slds-m-left_x-small">{acc.Industry}</span>
+                    </li>
+                </template>
+            </ul>
+
+            <!-- Pagination controls -->
+            <div class="slds-grid slds-grid_align-center slds-m-top_small">
+                <lightning-button
+                    label="Previous"
+                    disabled={!hasPreviousPage}
+                    onclick={handlePreviousPage}
+                    class="slds-m-right_x-small">
+                </lightning-button>
+                <span class="slds-align-middle">
+                    Page {currentPage} of {totalPages}
+                </span>
+                <lightning-button
+                    label="Next"
+                    disabled={!hasNextPage}
+                    onclick={handleNextPage}
+                    class="slds-m-left_x-small">
+                </lightning-button>
+            </div>
+        </template>
+
+        <template if:false={hasAccounts}>
+            <template if:false={hasError}>
+                <p class="slds-m-around_small slds-text-color_weak">
+                    No accounts found for industry: {industry}
+                </p>
+            </template>
+        </template>
+
+    </lightning-card>
+</template>
