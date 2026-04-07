@@ -42,7 +42,7 @@ Senior Salesforce Developer | 9+ Years | Architect-Track Preparation
 | 31 | Agentforce Deep Dive, Custom Actions via Apex, Einstein Copilot | Phase 3 | ✅ Done | [Day 31 →](docs/day-31.md) |
 | 32 | Data Cloud Architecture, Data Streams & Ingestion, Unified Profiles | Phase 3 | ✅ Done | [Day 32 →](docs/day-32.md) |
 | 33 | Data Cloud Segmentation, Real-Time CDP, Data Cloud + Apex | Phase 3 | ✅ Done | [Day 33 →](docs/day-33.md) |
-| 34 | Einstein Features & AI in Apex, Prediction Builder, AI-Powered Flows | Phase 3 | ⬜ Pending | — |
+| 34 | Einstein Features & AI in Apex, Prediction Builder, AI-Powered Flows | Phase 3 | ✅ Done | [Day 34 →](docs/day-34.md) |
 | 35 | Industry Clouds Overview, OmniStudio Basics, FlexCards | Phase 3 | ⬜ Pending | — |
 | 36 | End-to-End System Design, Multi-Cloud Architecture, Full Solution | Phase 3 | ⬜ Pending | — |
 | 37 | Mock Interview Day 1 — Apex + LWC + Triggers | Phase 3 | ⬜ Pending | — |
