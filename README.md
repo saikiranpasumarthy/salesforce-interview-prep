@@ -44,7 +44,7 @@ Senior Salesforce Developer | 9+ Years | Architect-Track Preparation
 | 33 | Data Cloud Segmentation, Real-Time CDP, Data Cloud + Apex | Phase 3 | ✅ Done | [Day 33 →](docs/day-33.md) |
 | 34 | Einstein Features & AI in Apex, Prediction Builder, AI-Powered Flows | Phase 3 | ✅ Done | [Day 34 →](docs/day-34.md) |
 | 35 | Industry Clouds Overview, OmniStudio Basics, FlexCards | Phase 3 | ✅ Done | [Day 35 →](docs/day-35.md) |
-| 36 | End-to-End System Design, Multi-Cloud Architecture, Full Solution | Phase 3 | ⬜ Pending | — |
+| 36 | End-to-End System Design, Multi-Cloud Architecture, Full Solution | Phase 3 | ✅ Done | [Day 36 →](docs/day-36.md) |
 | 37 | Mock Interview Day 1 — Apex + LWC + Triggers | Phase 3 | ⬜ Pending | — |
 | 38 | Mock Interview Day 2 — Clouds + DevOps + Design | Phase 3 | ⬜ Pending | — |
 | 39 | Weak Area Revisit (based on Mock Interview gaps) | Phase 3 | ⬜ Pending | — |
