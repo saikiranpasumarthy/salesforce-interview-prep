@@ -48,7 +48,7 @@ Senior Salesforce Developer | 9+ Years | Architect-Track Preparation
 | 37 | Mock Interview Day 1 — Apex + LWC + Triggers | Phase 3 | ✅ Done | [Day 37 →](docs/day-37.md) |
 | 38 | Mock Interview Day 2 — Clouds + DevOps + Design | Phase 3 | ✅ Done | [Day 38 →](docs/day-38.md) |
 | 39 | Weak Area Revisit (based on Mock Interview gaps) | Phase 3 | ✅ Done | [Day 39 →](docs/day-39.md) |
-| 40 | Advanced Scenarios, Cross-Cloud Architecture, Offer Negotiation Prep | Phase 3 | ⬜ Pending | — |
+| 40 | Advanced Scenarios, Cross-Cloud Architecture, Offer Negotiation Prep | Phase 3 | ✅ Done | [Day 40 →](docs/day-40.md) |
 | 41 | Jitterbit Deep Dive | Final | ⬜ Pending | — |
 
 ---
