@@ -1,0 +1,137 @@
+<!--
+    Day 37 — Mock Interview LWC Challenge
+    accountSearchCard: showcases all key LWC interview patterns:
+      - @wire for initial data load
+      - Imperative Apex for user-driven search
+      - Debounce pattern (300ms delay)
+      - @api public property
+      - Custom event dispatching (accountselected)
+      - Loading + error states
+      - Conditional rendering (if:true / lwc:if)
+      - Slot for compositional header
+-->
+<template>
+    <lightning-card>
+        <!-- Named slot: parent component can inject a custom header -->
+        <slot name="card-header">
+            <h2 slot="title" class="slds-card__header-title">
+                <lightning-icon icon-name="standard:account" size="small" class="slds-m-right_x-small"></lightning-icon>
+                Account Search
+            </h2>
+        </slot>
+
+        <div class="slds-card__body slds-card__body_inner">
+
+            <!-- Search input with debounce -->
+            <div class="slds-form-element slds-m-bottom_small">
+                <lightning-input
+                    type="search"
+                    label="Search Accounts"
+                    placeholder="Name, City, or Industry…"
+                    value={searchTerm}
+                    onchange={handleSearchChange}
+                    variant="label-hidden"
+                    class="slds-m-bottom_xx-small">
+                </lightning-input>
+                <p class="slds-text-body_small slds-text-color_weak">
+                    Showing {displayCount} of {totalCount} accounts
+                </p>
+            </div>
+
+            <!-- Loading spinner -->
+            <template lwc:if={isLoading}>
+                <div class="slds-align_absolute-center slds-p-around_medium">
+                    <lightning-spinner alternative-text="Loading accounts…" size="small"></lightning-spinner>
+                </div>
+            </template>
+
+            <!-- Error state -->
+            <template lwc:if={hasError}>
+                <div class="slds-notify slds-notify_alert slds-alert_error slds-m-bottom_small" role="alert">
+                    <lightning-icon
+                        icon-name="utility:error"
+                        variant="inverse"
+                        size="x-small"
+                        class="slds-m-right_x-small">
+                    </lightning-icon>
+                    <span>{errorMessage}</span>
+                    <button class="slds-button slds-button_icon slds-button_icon-inverse slds-notify__close"
+                            onclick={clearError} title="Close">
+                        <lightning-icon icon-name="utility:close" size="x-small" variant="inverse"></lightning-icon>
+                    </button>
+                </div>
+            </template>
+
+            <!-- Empty state -->
+            <template lwc:if={isEmpty}>
+                <div class="slds-illustration slds-illustration_small slds-align_absolute-center slds-p-around_medium">
+                    <p class="slds-text-body_regular slds-text-color_weak">
+                        No accounts found matching <em>{searchTerm}</em>
+                    </p>
+                </div>
+            </template>
+
+            <!-- Account list -->
+            <template lwc:if={hasAccounts}>
+                <ul class="slds-has-list-interactions">
+                    <template for:each={accounts} for:item="acc">
+                        <li key={acc.Id}
+                            class="slds-item slds-p-around_xx-small"
+                            onclick={handleAccountClick}
+                            data-id={acc.Id}
+                            data-name={acc.Name}>
+                            <div class="slds-media slds-media_center">
+                                <div class="slds-media__figure">
+                                    <lightning-icon
+                                        icon-name={acc.iconName}
+                                        size="small"
+                                        class="slds-m-right_x-small">
+                                    </lightning-icon>
+                                </div>
+                                <div class="slds-media__body">
+                                    <p class="slds-truncate slds-text-body_regular" title={acc.Name}>
+                                        <strong>{acc.Name}</strong>
+                                    </p>
+                                    <p class="slds-truncate slds-text-body_small slds-text-color_weak">
+                                        {acc.Industry} · {acc.BillingCity}
+                                    </p>
+                                </div>
+                                <div class="slds-media__figure slds-media__figure_reverse">
+                                    <template lwc:if={acc.Rating}>
+                                        <lightning-badge label={acc.Rating} class={acc.ratingClass}></lightning-badge>
+                                    </template>
+                                </div>
+                            </div>
+                        </li>
+                    </template>
+                </ul>
+            </template>
+
+            <!-- Pagination controls -->
+            <template lwc:if={showPagination}>
+                <div class="slds-grid slds-grid_align-center slds-m-top_small">
+                    <lightning-button-icon
+                        icon-name="utility:chevronleft"
+                        variant="border-filled"
+                        disabled={isFirstPage}
+                        onclick={previousPage}
+                        alternative-text="Previous page"
+                        class="slds-m-right_x-small">
+                    </lightning-button-icon>
+                    <span class="slds-align-middle slds-text-body_small">
+                        Page {currentPage} of {totalPages}
+                    </span>
+                    <lightning-button-icon
+                        icon-name="utility:chevronright"
+                        variant="border-filled"
+                        disabled={isLastPage}
+                        onclick={nextPage}
+                        alternative-text="Next page"
+                        class="slds-m-left_x-small">
+                    </lightning-button-icon>
+                </div>
+            </template>
+
+        </div>
+    </lightning-card>
+</template>
