@@ -1,0 +1,528 @@
+{
+  "warning": "OmniStudio Data Pack export format. Import via OmniStudio Designer > Data Pack Import.",
+  "DataPacks": [
+    {
+      "VlocityDataPackType": "OmniScript",
+      "VlocityDataPackName": "LoanApplication/WealthManagement/English",
+      "VlocityDataPackKey": "OmniScript/LoanApplication/WealthManagement/English",
+      "VlocityDataPackStatus": "Success",
+      "VlocityDataPackData": {
+        "OmniScriptType": "LoanApplication",
+        "SubType": "WealthManagement",
+        "Language": "English",
+        "IsActive": false,
+        "IsInternal": false,
+        "PropertySet": {
+          "ssm": false,
+          "saveType": "salesforce",
+          "saveObject": "LoanApplication__c",
+          "saveExternalIdField": "ExternalId__c",
+          "pubSub": false,
+          "wrapperStyle": "card",
+          "buttonAlignment": "right",
+          "nextLabel": "Next",
+          "prevLabel": "Back",
+          "cancelLabel": "Cancel",
+          "finalLabel": "Submit Application",
+          "displayFooter": true,
+          "displayHeader": true,
+          "autoFocus": true,
+          "timeoutEnabled": false,
+          "scriptTimeout": 900,
+          "publishMessageOnComplete": true,
+          "completeMessage": "LoanApplicationSubmitted"
+        },
+        "Elements": [
+
+          {
+            "Type": "Step",
+            "Name": "LoanDetails",
+            "Level": 1,
+            "Order": 0,
+            "PropertySet": {
+              "label": "Loan Details",
+              "helpText": "Tell us about the loan you're applying for.",
+              "hide": false
+            },
+            "Children": [
+              {
+                "Type": "Text",
+                "Name": "StepHeader_Loan",
+                "Level": 2,
+                "Order": 0,
+                "PropertySet": {
+                  "text": "<h3>Loan Application</h3><p>Apply for a mortgage, auto, personal, or HELOC loan. We'll check your eligibility instantly.</p>"
+                }
+              },
+              {
+                "Type": "Select",
+                "Name": "LoanType",
+                "Level": 2,
+                "Order": 1,
+                "PropertySet": {
+                  "label": "Loan Type",
+                  "required": true,
+                  "helpText": "Select the type of loan you are applying for.",
+                  "options": [
+                    { "label": "Mortgage — Home Purchase", "value": "MORTGAGE" },
+                    { "label": "Auto Loan", "value": "AUTO" },
+                    { "label": "Personal Loan", "value": "PERSONAL" },
+                    { "label": "Home Equity Line of Credit (HELOC)", "value": "HELOC" }
+                  ]
+                }
+              },
+              {
+                "Type": "Currency",
+                "Name": "RequestedAmount",
+                "Level": 2,
+                "Order": 2,
+                "PropertySet": {
+                  "label": "Loan Amount Requested",
+                  "required": true,
+                  "currencyCode": "USD",
+                  "minValue": 1000,
+                  "maxValue": 5000000,
+                  "helpText": "Enter the total amount you wish to borrow."
+                }
+              },
+              {
+                "Type": "Number",
+                "Name": "LoanTermMonths",
+                "Level": 2,
+                "Order": 3,
+                "PropertySet": {
+                  "label": "Desired Loan Term (Months)",
+                  "required": true,
+                  "minValue": 12,
+                  "maxValue": 360,
+                  "helpText": "Common terms: 12–84 months (auto), 36–60 months (personal), 120–360 months (mortgage)."
+                }
+              },
+              {
+                "Type": "Conditional",
+                "Name": "MortgageSection",
+                "Level": 2,
+                "Order": 4,
+                "PropertySet": {
+                  "conditionType": "Show",
+                  "conditions": [
+                    {
+                      "elementName": "LoanType",
+                      "operator": "===",
+                      "value": "MORTGAGE"
+                    }
+                  ]
+                },
+                "Children": [
+                  {
+                    "Type": "Currency",
+                    "Name": "PropertyValue",
+                    "Level": 3,
+                    "Order": 0,
+                    "PropertySet": {
+                      "label": "Property Purchase Price / Appraised Value",
+                      "required": false,
+                      "currencyCode": "USD",
+                      "helpText": "Required for Loan-to-Value (LTV) calculation."
+                    }
+                  },
+                  {
+                    "Type": "Input",
+                    "Name": "PropertyAddress",
+                    "Level": 3,
+                    "Order": 1,
+                    "PropertySet": {
+                      "label": "Property Address",
+                      "required": false,
+                      "maxLength": 255
+                    }
+                  },
+                  {
+                    "Type": "Select",
+                    "Name": "MortgagePurpose",
+                    "Level": 3,
+                    "Order": 2,
+                    "PropertySet": {
+                      "label": "Mortgage Purpose",
+                      "required": false,
+                      "options": [
+                        { "label": "Primary Residence", "value": "PRIMARY" },
+                        { "label": "Second Home", "value": "SECOND_HOME" },
+                        { "label": "Investment Property", "value": "INVESTMENT" }
+                      ]
+                    }
+                  }
+                ]
+              },
+              {
+                "Type": "Conditional",
+                "Name": "AutoSection",
+                "Level": 2,
+                "Order": 5,
+                "PropertySet": {
+                  "conditionType": "Show",
+                  "conditions": [
+                    {
+                      "elementName": "LoanType",
+                      "operator": "===",
+                      "value": "AUTO"
+                    }
+                  ]
+                },
+                "Children": [
+                  {
+                    "Type": "Input",
+                    "Name": "VehicleMake",
+                    "Level": 3,
+                    "Order": 0,
+                    "PropertySet": {
+                      "label": "Vehicle Make",
+                      "required": false,
+                      "maxLength": 50
+                    }
+                  },
+                  {
+                    "Type": "Input",
+                    "Name": "VehicleModel",
+                    "Level": 3,
+                    "Order": 1,
+                    "PropertySet": {
+                      "label": "Vehicle Model",
+                      "required": false,
+                      "maxLength": 50
+                    }
+                  },
+                  {
+                    "Type": "Number",
+                    "Name": "VehicleYear",
+                    "Level": 3,
+                    "Order": 2,
+                    "PropertySet": {
+                      "label": "Vehicle Year",
+                      "required": false,
+                      "minValue": 1990,
+                      "maxValue": 2026
+                    }
+                  }
+                ]
+              },
+              {
+                "Type": "Text",
+                "Name": "LoanEstimateNotice",
+                "Level": 2,
+                "Order": 6,
+                "PropertySet": {
+                  "text": "<div class='slds-box slds-theme_info'><p><strong>Good to know:</strong> Submitting this application performs a soft credit pull only. A hard pull occurs only if you accept a loan offer.</p></div>"
+                }
+              }
+            ]
+          },
+
+          {
+            "Type": "Step",
+            "Name": "FinancialVerification",
+            "Level": 1,
+            "Order": 1,
+            "PropertySet": {
+              "label": "Financial Verification",
+              "helpText": "We'll verify your income and run eligibility checks in real time.",
+              "hide": false
+            },
+            "Children": [
+              {
+                "Type": "Text",
+                "Name": "StepHeader_Financial",
+                "Level": 2,
+                "Order": 0,
+                "PropertySet": {
+                  "text": "<h3>Financial Verification</h3><p>We use your income and existing debt to calculate your Debt-to-Income (DTI) ratio.</p>"
+                }
+              },
+              {
+                "Type": "Currency",
+                "Name": "AnnualIncome",
+                "Level": 2,
+                "Order": 1,
+                "PropertySet": {
+                  "label": "Annual Gross Income",
+                  "required": true,
+                  "currencyCode": "USD",
+                  "minValue": 0,
+                  "helpText": "Include salary, business income, investment income, and all other sources."
+                }
+              },
+              {
+                "Type": "Currency",
+                "Name": "MonthlyDebtPayments",
+                "Level": 2,
+                "Order": 2,
+                "PropertySet": {
+                  "label": "Total Monthly Debt Payments",
+                  "required": true,
+                  "currencyCode": "USD",
+                  "minValue": 0,
+                  "helpText": "Include all existing loan payments, credit card minimums, and rent/mortgage."
+                }
+              },
+              {
+                "Type": "Integration Procedure Action",
+                "Name": "CalculateDTI",
+                "Level": 2,
+                "Order": 3,
+                "PropertySet": {
+                  "integrationProcedureName": "LoanEligibilityIP",
+                  "remoteClass": "LoanEligibilityIP",
+                  "remoteTimeout": 10000,
+                  "inputMap": {
+                    "action": "CALCULATE_DTI",
+                    "monthlyDebt": "%MonthlyDebtPayments%",
+                    "annualIncome": "%AnnualIncome%"
+                  },
+                  "outputMap": {
+                    "dti": "DTIResult:dti",
+                    "dtiCategory": "DTIResult:dtiCategory",
+                    "dtiMessage": "DTIResult:dtiMessage"
+                  },
+                  "autoTrigger": true
+                }
+              },
+              {
+                "Type": "Text",
+                "Name": "DTIDisplay",
+                "Level": 2,
+                "Order": 4,
+                "PropertySet": {
+                  "text": "<div class='slds-box slds-theme_shade'><strong>Your Debt-to-Income Ratio:</strong> {DTIResult:dti}% — <em>{DTIResult:dtiMessage}</em></div>",
+                  "show": "{DTIResult:dti}"
+                }
+              },
+              {
+                "Type": "Conditional",
+                "Name": "HighDTIWarning",
+                "Level": 2,
+                "Order": 5,
+                "PropertySet": {
+                  "conditionType": "Show",
+                  "conditions": [
+                    {
+                      "elementName": "DTIResult:dtiCategory",
+                      "operator": "===",
+                      "value": "HIGH"
+                    }
+                  ]
+                },
+                "Children": [
+                  {
+                    "Type": "Text",
+                    "Name": "HighDTIAlert",
+                    "Level": 3,
+                    "Order": 0,
+                    "PropertySet": {
+                      "text": "<div class='slds-notify slds-notify_alert slds-alert_warning'><strong>High DTI Detected:</strong> Your debt-to-income ratio is above 50%. This application may require manual review by a loan officer. You can still proceed.</div>"
+                    }
+                  }
+                ]
+              },
+              {
+                "Type": "Select",
+                "Name": "CollateralType",
+                "Level": 2,
+                "Order": 6,
+                "PropertySet": {
+                  "label": "Collateral (if applicable)",
+                  "required": false,
+                  "options": [
+                    { "label": "None", "value": "NONE" },
+                    { "label": "Real Estate", "value": "REAL_ESTATE" },
+                    { "label": "Vehicle", "value": "VEHICLE" },
+                    { "label": "Investment Portfolio", "value": "INVESTMENT" },
+                    { "label": "Other", "value": "OTHER" }
+                  ]
+                }
+              },
+              {
+                "Type": "Checkbox",
+                "Name": "ConsentHardPull",
+                "Level": 2,
+                "Order": 7,
+                "PropertySet": {
+                  "label": "I authorize a hard credit inquiry if I accept a loan offer.",
+                  "required": true,
+                  "helpText": "A hard pull may temporarily affect your credit score by 2–5 points."
+                }
+              }
+            ]
+          },
+
+          {
+            "Type": "Step",
+            "Name": "ReviewAndSubmit",
+            "Level": 1,
+            "Order": 2,
+            "PropertySet": {
+              "label": "Review & Submit",
+              "helpText": "Review your application and submit for instant eligibility decision.",
+              "hide": false,
+              "isFinal": true
+            },
+            "Children": [
+              {
+                "Type": "Text",
+                "Name": "StepHeader_Review",
+                "Level": 2,
+                "Order": 0,
+                "PropertySet": {
+                  "text": "<h3>Review Your Loan Application</h3>"
+                }
+              },
+              {
+                "Type": "Review",
+                "Name": "LoanSummary",
+                "Level": 2,
+                "Order": 1,
+                "PropertySet": {
+                  "label": "Application Summary",
+                  "reviewSteps": ["LoanDetails", "FinancialVerification"],
+                  "editButtonLabel": "Edit",
+                  "showAllValues": false
+                }
+              },
+              {
+                "Type": "Integration Procedure Action",
+                "Name": "RunEligibilityCheck",
+                "Level": 2,
+                "Order": 2,
+                "PropertySet": {
+                  "integrationProcedureName": "LoanEligibilityIP",
+                  "remoteClass": "LoanEligibilityIP",
+                  "remoteTimeout": 45000,
+                  "inputMap": {
+                    "action": "FULL_ELIGIBILITY",
+                    "LoanType": "%LoanType%",
+                    "RequestedAmount": "%RequestedAmount%",
+                    "LoanTermMonths": "%LoanTermMonths%",
+                    "AnnualIncome": "%AnnualIncome%",
+                    "MonthlyDebtPayments": "%MonthlyDebtPayments%",
+                    "applicantId": "%CurrentUser:AccountId%"
+                  },
+                  "outputMap": {
+                    "eligibilityDecision": "EligibilityResult:decision",
+                    "creditScore": "EligibilityResult:creditScore",
+                    "creditBand": "EligibilityResult:creditBand",
+                    "dti": "EligibilityResult:dti",
+                    "loanAppId": "EligibilityResult:loanAppId",
+                    "approvalTier": "EligibilityResult:approvalTier",
+                    "estimatedRate": "EligibilityResult:estimatedRate",
+                    "errorMessage": "EligibilityResult:errorMessage"
+                  },
+                  "autoTrigger": false
+                }
+              },
+              {
+                "Type": "Conditional",
+                "Name": "AutoApprovedDisplay",
+                "Level": 2,
+                "Order": 3,
+                "PropertySet": {
+                  "conditionType": "Show",
+                  "conditions": [
+                    {
+                      "elementName": "EligibilityResult:decision",
+                      "operator": "===",
+                      "value": "AUTO_APPROVED"
+                    }
+                  ]
+                },
+                "Children": [
+                  {
+                    "Type": "Text",
+                    "Name": "AutoApprovedAlert",
+                    "Level": 3,
+                    "Order": 0,
+                    "PropertySet": {
+                      "text": "<div class='slds-notify slds-notify_alert slds-alert_success'><strong>Congratulations! Pre-Approved.</strong><br/>Credit Score: {EligibilityResult:creditScore} ({EligibilityResult:creditBand})<br/>DTI: {EligibilityResult:dti}%<br/>Estimated Rate: {EligibilityResult:estimatedRate}%<br/>A loan officer will contact you within 1 business day to finalize terms.</div>"
+                    }
+                  }
+                ]
+              },
+              {
+                "Type": "Conditional",
+                "Name": "ManualReviewDisplay",
+                "Level": 2,
+                "Order": 4,
+                "PropertySet": {
+                  "conditionType": "Show",
+                  "conditions": [
+                    {
+                      "elementName": "EligibilityResult:decision",
+                      "operator": "===",
+                      "value": "MANUAL_REVIEW"
+                    }
+                  ]
+                },
+                "Children": [
+                  {
+                    "Type": "Text",
+                    "Name": "ManualReviewAlert",
+                    "Level": 3,
+                    "Order": 0,
+                    "PropertySet": {
+                      "text": "<div class='slds-notify slds-notify_alert slds-alert_warning'><strong>Under Review.</strong><br/>Your application has been submitted and requires manual review ({EligibilityResult:approvalTier}). You'll receive a decision within 2–3 business days.</div>"
+                    }
+                  }
+                ]
+              },
+              {
+                "Type": "Conditional",
+                "Name": "DeclinedDisplay",
+                "Level": 2,
+                "Order": 5,
+                "PropertySet": {
+                  "conditionType": "Show",
+                  "conditions": [
+                    {
+                      "elementName": "EligibilityResult:decision",
+                      "operator": "===",
+                      "value": "DECLINED"
+                    }
+                  ]
+                },
+                "Children": [
+                  {
+                    "Type": "Text",
+                    "Name": "DeclinedAlert",
+                    "Level": 3,
+                    "Order": 0,
+                    "PropertySet": {
+                      "text": "<div class='slds-notify slds-notify_alert slds-alert_error'><strong>Application Not Approved.</strong><br/>Based on the information provided, we are unable to approve this loan at this time. You will receive an Adverse Action Notice by mail within 30 days as required by law.</div>"
+                    }
+                  }
+                ]
+              },
+              {
+                "Type": "Checkbox",
+                "Name": "FinalAcknowledgement",
+                "Level": 2,
+                "Order": 6,
+                "PropertySet": {
+                  "label": "I certify that all information provided is true and accurate. I understand that misrepresentation may result in loan denial or legal action.",
+                  "required": true
+                }
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ],
+
+  "interviewNotes": {
+    "autoTriggerVsManual": "CalculateDTI step uses autoTrigger:true so DTI is computed as soon as Step 2 loads (using values entered in Step 1). RunEligibilityCheck uses autoTrigger:false — triggered only on final Submit click to avoid premature credit pulls.",
+    "integrationProcedureOrchestration": "LoanEligibilityIP action 'FULL_ELIGIBILITY' calls WealthManagementCallable sequentially: (1) calcDebtToIncomeRatio → (2) fetchCreditScore (live callout via Named Credential) → (3) DataRaptor Load to create LoanApplication__c → (4) trigger LoanEligibilityService.scoreEligibility() → (5) if MANUAL_REVIEW, submit Salesforce approval.",
+    "conditionalSteps": "MortgageSection and AutoSection use Conditional elements to show loan-type-specific fields. This replaces v-if directives in LWC. Admin can modify conditions in OmniScript Designer without deployment.",
+    "externalIdStrategy": "saveType:salesforce with saveExternalIdField:ExternalId__c means OmniScript will upsert LoanApplication__c via External ID — idempotent on retry (e.g., if user hits back and resubmits).",
+    "dtiDisplayPattern": "DTI result is displayed inline using {DTIResult:dti} merge syntax — the IP response populates the OS data JSON node, and Text element renders it. No controller code needed.",
+    "decisionBranching": "Three Conditional elements (AutoApprovedDisplay, ManualReviewDisplay, DeclinedDisplay) each check EligibilityResult:decision. Only one shows. Same pattern as switch statement but declarative.",
+    "approvalTierExposure": "EligibilityResult:approvalTier is surfaced in the MANUAL_REVIEW message so the advisor assigned to the case knows immediately whether it's BRANCH_MANAGER / DIRECTOR / EXECUTIVE tier."
+  }
+}

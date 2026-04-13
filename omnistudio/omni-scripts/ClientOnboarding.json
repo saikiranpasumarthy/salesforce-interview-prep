@@ -1,0 +1,630 @@
+{
+  "warning": "OmniStudio Data Pack export format. Import via OmniStudio Designer > Data Pack Import. Do NOT manually edit field-level JSON keys unless you understand the OmniScript property schema.",
+  "DataPacks": [
+    {
+      "VlocityDataPackType": "OmniScript",
+      "VlocityDataPackName": "ClientOnboarding/WealthManagement/English",
+      "VlocityDataPackKey": "OmniScript/ClientOnboarding/WealthManagement/English",
+      "VlocityDataPackStatus": "Success",
+      "VlocityDataPackData": {
+        "OmniScriptType": "ClientOnboarding",
+        "SubType": "WealthManagement",
+        "Language": "English",
+        "IsActive": false,
+        "IsInternal": false,
+        "PropertySet": {
+          "ssm": false,
+          "saveType": "none",
+          "pubSub": false,
+          "wrapperStyle": "card",
+          "buttonAlignment": "right",
+          "cancelType": "internal",
+          "nextLabel": "Next",
+          "prevLabel": "Back",
+          "cancelLabel": "Cancel",
+          "finalLabel": "Submit",
+          "displayFooter": true,
+          "displayHeader": true,
+          "autoFocus": true,
+          "trackingCustomData": {},
+          "timeoutEnabled": false,
+          "timeoutWarningDuration": 60,
+          "timeoutRedirectUrl": "/",
+          "scriptTimeout": 900
+        },
+        "Elements": [
+
+          {
+            "Type": "Step",
+            "Name": "PersonalInformation",
+            "Level": 1,
+            "Order": 0,
+            "PropertySet": {
+              "label": "Personal Information",
+              "helpText": "Please provide your legal name and contact details as they appear on government-issued ID.",
+              "hide": false,
+              "showLabel": true
+            },
+            "Children": [
+              {
+                "Type": "Text",
+                "Name": "StepHeader_Personal",
+                "Level": 2,
+                "Order": 0,
+                "PropertySet": {
+                  "text": "<h3>Let's get started with your personal details.</h3><p>All information is encrypted and stored securely.</p>",
+                  "show": true
+                }
+              },
+              {
+                "Type": "Input",
+                "Name": "FirstName",
+                "Level": 2,
+                "Order": 1,
+                "PropertySet": {
+                  "label": "First Name",
+                  "required": true,
+                  "maxLength": 80,
+                  "minLength": 1,
+                  "mask": false,
+                  "placeholder": "Jane",
+                  "helpText": "Enter your legal first name.",
+                  "validationRegex": "^[A-Za-z '-]{1,80}$",
+                  "validationMessage": "First name may only contain letters, spaces, hyphens, and apostrophes."
+                }
+              },
+              {
+                "Type": "Input",
+                "Name": "LastName",
+                "Level": 2,
+                "Order": 2,
+                "PropertySet": {
+                  "label": "Last Name",
+                  "required": true,
+                  "maxLength": 80,
+                  "placeholder": "Smith",
+                  "helpText": "Enter your legal last name."
+                }
+              },
+              {
+                "Type": "DatePicker",
+                "Name": "DateOfBirth",
+                "Level": 2,
+                "Order": 3,
+                "PropertySet": {
+                  "label": "Date of Birth",
+                  "required": true,
+                  "helpText": "You must be at least 18 years old to open an account.",
+                  "dateFormat": "MM/DD/YYYY"
+                }
+              },
+              {
+                "Type": "Input",
+                "Name": "SSN",
+                "Level": 2,
+                "Order": 4,
+                "PropertySet": {
+                  "label": "Social Security Number",
+                  "required": true,
+                  "maxLength": 11,
+                  "mask": true,
+                  "maskChar": "*",
+                  "placeholder": "XXX-XX-XXXX",
+                  "helpText": "Your SSN is used for identity verification and credit check only.",
+                  "validationRegex": "^\\d{3}-\\d{2}-\\d{4}$",
+                  "validationMessage": "Please enter SSN in format XXX-XX-XXXX."
+                }
+              },
+              {
+                "Type": "Input",
+                "Name": "Email",
+                "Level": 2,
+                "Order": 5,
+                "PropertySet": {
+                  "label": "Email Address",
+                  "required": true,
+                  "type": "email",
+                  "maxLength": 80,
+                  "placeholder": "jane.smith@example.com"
+                }
+              },
+              {
+                "Type": "Input",
+                "Name": "Phone",
+                "Level": 2,
+                "Order": 6,
+                "PropertySet": {
+                  "label": "Mobile Phone",
+                  "required": true,
+                  "type": "tel",
+                  "maxLength": 20,
+                  "placeholder": "(555) 555-5555"
+                }
+              },
+              {
+                "Type": "Input",
+                "Name": "AddressLine1",
+                "Level": 2,
+                "Order": 7,
+                "PropertySet": {
+                  "label": "Street Address",
+                  "required": true,
+                  "maxLength": 255
+                }
+              },
+              {
+                "Type": "Input",
+                "Name": "City",
+                "Level": 2,
+                "Order": 8,
+                "PropertySet": {
+                  "label": "City",
+                  "required": true,
+                  "maxLength": 80
+                }
+              },
+              {
+                "Type": "Select",
+                "Name": "State",
+                "Level": 2,
+                "Order": 9,
+                "PropertySet": {
+                  "label": "State",
+                  "required": true,
+                  "options": [
+                    { "label": "Alabama", "value": "AL" },
+                    { "label": "Alaska", "value": "AK" },
+                    { "label": "Arizona", "value": "AZ" },
+                    { "label": "California", "value": "CA" },
+                    { "label": "Colorado", "value": "CO" },
+                    { "label": "Connecticut", "value": "CT" },
+                    { "label": "Florida", "value": "FL" },
+                    { "label": "Georgia", "value": "GA" },
+                    { "label": "Illinois", "value": "IL" },
+                    { "label": "Massachusetts", "value": "MA" },
+                    { "label": "Michigan", "value": "MI" },
+                    { "label": "New Jersey", "value": "NJ" },
+                    { "label": "New York", "value": "NY" },
+                    { "label": "North Carolina", "value": "NC" },
+                    { "label": "Ohio", "value": "OH" },
+                    { "label": "Pennsylvania", "value": "PA" },
+                    { "label": "Texas", "value": "TX" },
+                    { "label": "Virginia", "value": "VA" },
+                    { "label": "Washington", "value": "WA" }
+                  ]
+                }
+              },
+              {
+                "Type": "Input",
+                "Name": "ZipCode",
+                "Level": 2,
+                "Order": 10,
+                "PropertySet": {
+                  "label": "ZIP Code",
+                  "required": true,
+                  "maxLength": 10,
+                  "validationRegex": "^\\d{5}(-\\d{4})?$",
+                  "validationMessage": "Enter a valid ZIP code (e.g., 10001 or 10001-1234)."
+                }
+              }
+            ]
+          },
+
+          {
+            "Type": "Step",
+            "Name": "EmploymentAndIncome",
+            "Level": 1,
+            "Order": 1,
+            "PropertySet": {
+              "label": "Employment & Income",
+              "helpText": "This information is used to calculate loan eligibility and assess financial health.",
+              "hide": false
+            },
+            "Children": [
+              {
+                "Type": "Text",
+                "Name": "StepHeader_Employment",
+                "Level": 2,
+                "Order": 0,
+                "PropertySet": {
+                  "text": "<h3>Tell us about your employment and income.</h3>"
+                }
+              },
+              {
+                "Type": "Select",
+                "Name": "EmploymentStatus",
+                "Level": 2,
+                "Order": 1,
+                "PropertySet": {
+                  "label": "Employment Status",
+                  "required": true,
+                  "options": [
+                    { "label": "Employed Full-Time", "value": "EMPLOYED_FULL_TIME" },
+                    { "label": "Employed Part-Time", "value": "EMPLOYED_PART_TIME" },
+                    { "label": "Self-Employed", "value": "SELF_EMPLOYED" },
+                    { "label": "Retired", "value": "RETIRED" },
+                    { "label": "Unemployed", "value": "UNEMPLOYED" },
+                    { "label": "Student", "value": "STUDENT" }
+                  ]
+                }
+              },
+              {
+                "Type": "Conditional",
+                "Name": "EmployerSection",
+                "Level": 2,
+                "Order": 2,
+                "PropertySet": {
+                  "conditionType": "Show",
+                  "conditions": [
+                    {
+                      "elementName": "EmploymentStatus",
+                      "operator": "!==",
+                      "value": "UNEMPLOYED",
+                      "conjunction": "AND"
+                    },
+                    {
+                      "elementName": "EmploymentStatus",
+                      "operator": "!==",
+                      "value": "STUDENT"
+                    }
+                  ]
+                },
+                "Children": [
+                  {
+                    "Type": "Input",
+                    "Name": "EmployerName",
+                    "Level": 3,
+                    "Order": 0,
+                    "PropertySet": {
+                      "label": "Employer Name",
+                      "required": false,
+                      "maxLength": 255
+                    }
+                  },
+                  {
+                    "Type": "Input",
+                    "Name": "JobTitle",
+                    "Level": 3,
+                    "Order": 1,
+                    "PropertySet": {
+                      "label": "Job Title",
+                      "required": false,
+                      "maxLength": 128
+                    }
+                  },
+                  {
+                    "Type": "Number",
+                    "Name": "YearsEmployed",
+                    "Level": 3,
+                    "Order": 2,
+                    "PropertySet": {
+                      "label": "Years at Current Employer",
+                      "required": false,
+                      "minValue": 0,
+                      "maxValue": 50
+                    }
+                  }
+                ]
+              },
+              {
+                "Type": "Currency",
+                "Name": "AnnualIncome",
+                "Level": 2,
+                "Order": 3,
+                "PropertySet": {
+                  "label": "Annual Gross Income",
+                  "required": true,
+                  "currencyCode": "USD",
+                  "minValue": 0,
+                  "helpText": "Enter your total annual income before taxes, including all sources."
+                }
+              },
+              {
+                "Type": "Currency",
+                "Name": "MonthlyDebtPayments",
+                "Level": 2,
+                "Order": 4,
+                "PropertySet": {
+                  "label": "Monthly Debt Payments",
+                  "required": true,
+                  "currencyCode": "USD",
+                  "minValue": 0,
+                  "helpText": "Include mortgage/rent, car payments, student loans, credit card minimums, etc."
+                }
+              },
+              {
+                "Type": "Select",
+                "Name": "IncomeSources",
+                "Level": 2,
+                "Order": 5,
+                "PropertySet": {
+                  "label": "Primary Income Source",
+                  "required": false,
+                  "options": [
+                    { "label": "Salary / Wages", "value": "SALARY" },
+                    { "label": "Self-Employment / Business Income", "value": "BUSINESS" },
+                    { "label": "Investment Income", "value": "INVESTMENT" },
+                    { "label": "Rental Income", "value": "RENTAL" },
+                    { "label": "Retirement / Pension", "value": "RETIREMENT" },
+                    { "label": "Social Security", "value": "SOCIAL_SECURITY" },
+                    { "label": "Other", "value": "OTHER" }
+                  ]
+                }
+              }
+            ]
+          },
+
+          {
+            "Type": "Step",
+            "Name": "FinancialProfile",
+            "Level": 1,
+            "Order": 2,
+            "PropertySet": {
+              "label": "Financial Profile",
+              "helpText": "We'll verify your identity and assess your financial health.",
+              "hide": false
+            },
+            "Children": [
+              {
+                "Type": "Text",
+                "Name": "StepHeader_Financial",
+                "Level": 2,
+                "Order": 0,
+                "PropertySet": {
+                  "text": "<h3>Financial Profile & Identity Verification</h3><p>We'll perform a soft credit inquiry and OFAC check. This does not affect your credit score.</p>"
+                }
+              },
+              {
+                "Type": "Select",
+                "Name": "AccountTypesRequested",
+                "Level": 2,
+                "Order": 1,
+                "PropertySet": {
+                  "label": "Accounts to Open",
+                  "required": true,
+                  "multiselect": true,
+                  "helpText": "Select all account types you wish to open.",
+                  "options": [
+                    { "label": "Checking Account", "value": "CHECKING" },
+                    { "label": "Savings Account", "value": "SAVINGS" },
+                    { "label": "Investment Account", "value": "INVESTMENT" },
+                    { "label": "Retirement (IRA)", "value": "RETIREMENT" }
+                  ]
+                }
+              },
+              {
+                "Type": "Currency",
+                "Name": "InitialDepositAmount",
+                "Level": 2,
+                "Order": 2,
+                "PropertySet": {
+                  "label": "Initial Deposit Amount",
+                  "required": false,
+                  "currencyCode": "USD",
+                  "minValue": 0,
+                  "helpText": "Optional: estimated amount for initial deposit across selected accounts."
+                }
+              },
+              {
+                "Type": "Checkbox",
+                "Name": "ConsentCreditCheck",
+                "Level": 2,
+                "Order": 3,
+                "PropertySet": {
+                  "label": "I authorize the bank to perform a soft credit inquiry for account opening purposes.",
+                  "required": true,
+                  "helpText": "A soft inquiry does not affect your credit score."
+                }
+              },
+              {
+                "Type": "Checkbox",
+                "Name": "ConsentKyc",
+                "Level": 2,
+                "Order": 4,
+                "PropertySet": {
+                  "label": "I consent to identity verification including OFAC sanctions screening.",
+                  "required": true
+                }
+              },
+              {
+                "Type": "Checkbox",
+                "Name": "ConsentDataUse",
+                "Level": 2,
+                "Order": 5,
+                "PropertySet": {
+                  "label": "I agree to the bank's Privacy Policy and Terms of Service.",
+                  "required": true
+                }
+              },
+              {
+                "Type": "Integration Procedure Action",
+                "Name": "RunOnboardingIP",
+                "Level": 2,
+                "Order": 6,
+                "PropertySet": {
+                  "integrationProcedureName": "ClientOnboardingIP",
+                  "remoteClass": "ClientOnboardingIP",
+                  "remoteTimeout": 30000,
+                  "preTransformBundle": "OnboardingRequestTransform",
+                  "postTransformBundle": "OnboardingResponseTransform",
+                  "inputMap": {
+                    "FirstName": "%FirstName%",
+                    "LastName": "%LastName%",
+                    "DateOfBirth": "%DateOfBirth%",
+                    "SSN": "%SSN%",
+                    "Email": "%Email%",
+                    "Phone": "%Phone%",
+                    "AddressLine1": "%AddressLine1%",
+                    "City": "%City%",
+                    "State": "%State%",
+                    "ZipCode": "%ZipCode%",
+                    "EmploymentStatus": "%EmploymentStatus%",
+                    "AnnualIncome": "%AnnualIncome%",
+                    "MonthlyDebtPayments": "%MonthlyDebtPayments%",
+                    "AccountTypesRequested": "%AccountTypesRequested%",
+                    "ConsentCreditCheck": "%ConsentCreditCheck%",
+                    "ConsentKyc": "%ConsentKyc%"
+                  },
+                  "outputMap": {
+                    "kycPassed": "OnboardingResult:kycPassed",
+                    "creditScore": "OnboardingResult:creditScore",
+                    "creditBand": "OnboardingResult:creditBand",
+                    "accountId": "OnboardingResult:accountId",
+                    "errorMessage": "OnboardingResult:errorMessage"
+                  },
+                  "autoTrigger": false,
+                  "showStepChatter": false
+                }
+              },
+              {
+                "Type": "Conditional",
+                "Name": "KycFailedMessage",
+                "Level": 2,
+                "Order": 7,
+                "PropertySet": {
+                  "conditionType": "Show",
+                  "conditions": [
+                    {
+                      "elementName": "OnboardingResult:kycPassed",
+                      "operator": "===",
+                      "value": false
+                    }
+                  ]
+                },
+                "Children": [
+                  {
+                    "Type": "Text",
+                    "Name": "KycFailureAlert",
+                    "Level": 3,
+                    "Order": 0,
+                    "PropertySet": {
+                      "text": "<div class='slds-notify slds-notify_alert slds-alert_error'><p>Identity verification could not be completed. Please contact your branch for assistance.</p></div>"
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+
+          {
+            "Type": "Step",
+            "Name": "ReviewAndSubmit",
+            "Level": 1,
+            "Order": 3,
+            "PropertySet": {
+              "label": "Review & Submit",
+              "helpText": "Please review all information before submitting.",
+              "hide": false,
+              "isFinal": true
+            },
+            "Children": [
+              {
+                "Type": "Text",
+                "Name": "StepHeader_Review",
+                "Level": 2,
+                "Order": 0,
+                "PropertySet": {
+                  "text": "<h3>Review Your Application</h3><p>Please confirm all details are correct before submitting.</p>"
+                }
+              },
+              {
+                "Type": "Review",
+                "Name": "ApplicationSummary",
+                "Level": 2,
+                "Order": 1,
+                "PropertySet": {
+                  "label": "Application Summary",
+                  "reviewSteps": [
+                    "PersonalInformation",
+                    "EmploymentAndIncome",
+                    "FinancialProfile"
+                  ],
+                  "editButtonLabel": "Edit",
+                  "showAllValues": false
+                }
+              },
+              {
+                "Type": "Text",
+                "Name": "CreditScoreDisplay",
+                "Level": 2,
+                "Order": 2,
+                "PropertySet": {
+                  "text": "<div class='slds-box slds-theme_shade'><strong>Credit Score:</strong> {OnboardingResult:creditScore} ({OnboardingResult:creditBand})</div>",
+                  "show": "{OnboardingResult:creditScore}"
+                }
+              },
+              {
+                "Type": "Checkbox",
+                "Name": "FinalConfirmation",
+                "Level": 2,
+                "Order": 3,
+                "PropertySet": {
+                  "label": "I certify that all information provided is accurate and complete. I understand that providing false information may result in application denial.",
+                  "required": true
+                }
+              },
+              {
+                "Type": "Integration Procedure Action",
+                "Name": "SubmitOnboarding",
+                "Level": 2,
+                "Order": 4,
+                "PropertySet": {
+                  "integrationProcedureName": "ClientOnboardingIP",
+                  "remoteClass": "ClientOnboardingIP",
+                  "remoteTimeout": 30000,
+                  "inputMap": {
+                    "accountId": "%OnboardingResult:accountId%",
+                    "FinalConfirmation": "%FinalConfirmation%",
+                    "action": "FINALIZE"
+                  },
+                  "outputMap": {
+                    "submissionStatus": "SubmissionResult:status",
+                    "submissionMessage": "SubmissionResult:message",
+                    "recordUrl": "SubmissionResult:recordUrl"
+                  },
+                  "autoTrigger": false
+                }
+              },
+              {
+                "Type": "Conditional",
+                "Name": "SuccessMessage",
+                "Level": 2,
+                "Order": 5,
+                "PropertySet": {
+                  "conditionType": "Show",
+                  "conditions": [
+                    {
+                      "elementName": "SubmissionResult:status",
+                      "operator": "===",
+                      "value": "SUCCESS"
+                    }
+                  ]
+                },
+                "Children": [
+                  {
+                    "Type": "Text",
+                    "Name": "SuccessAlert",
+                    "Level": 3,
+                    "Order": 0,
+                    "PropertySet": {
+                      "text": "<div class='slds-notify slds-notify_alert slds-alert_success'><strong>Application Submitted!</strong> Your account(s) are being set up. You'll receive a confirmation email shortly.</div>"
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ],
+
+  "interviewNotes": {
+    "whyOmniScriptOverLWC": "OmniScript provides declarative step navigation, built-in conditional branching, native Integration Procedure action steps, and Review step — all without custom JavaScript state management. An LWC equivalent would require 400+ lines of JS.",
+    "integrationProcedureAction": "The 'Integration Procedure Action' element type calls an IP server-side — no client-side callout. The IP orchestrates: DataRaptor Extract (existing household check), KYC callout, credit score callout, DataRaptor Load (upsert Account + FinancialAccount__c).",
+    "conditionalVisibility": "EmployerSection uses Conditional element to show/hide employer fields based on EmploymentStatus. KycFailedMessage shows only when kycPassed === false. These replace if/else logic in LWC.",
+    "maskField": "SSN field uses mask:true to display as *** during entry — built-in OmniScript feature, no custom CSS needed.",
+    "reviewStep": "The Review element auto-generates a summary table from all previous steps' data — advisor can review without data re-entry risk.",
+    "dataFlowPattern": "Step 3 calls IP which calls WealthManagementCallable.call('validateKyc',...) → KycValidationService, then WealthManagementCallable.call('fetchCreditScore',...) → CreditScoreService. Results stored in OS context as OnboardingResult:*."
+  }
+}
