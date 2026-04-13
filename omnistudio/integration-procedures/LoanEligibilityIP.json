@@ -1,0 +1,477 @@
+{
+  "warning": "OmniStudio Integration Procedure Data Pack format. Import via OmniStudio Designer > Integration Procedures > Import.",
+  "DataPacks": [
+    {
+      "VlocityDataPackType": "IntegrationProcedure",
+      "VlocityDataPackName": "LoanEligibility/WealthManagement",
+      "VlocityDataPackKey": "IntegrationProcedure/LoanEligibility/WealthManagement",
+      "VlocityDataPackStatus": "Success",
+      "VlocityDataPackData": {
+        "Name": "LoanEligibilityIP",
+        "Type": "LoanEligibility",
+        "SubType": "WealthManagement",
+        "Description": "Orchestrates the full loan eligibility decisioning pipeline: input validation, DTI calculation, credit score fetch, eligibility decision via WealthManagementCallable, LoanApplication__c upsert via DataRaptor, and approval routing. Supports two action modes: CALCULATE_DTI (Step 2 autoTrigger) and FULL_ELIGIBILITY (Step 3 Submit).",
+        "IsActive": true,
+        "StepChartEnabled": true,
+        "IPMergeEnabled": false,
+
+        "Elements": [
+
+          {
+            "index": 1,
+            "type": "SetValues",
+            "name": "InitializeContext",
+            "description": "Set correlation ID, determine action mode (CALCULATE_DTI vs FULL_ELIGIBILITY), and initialize output variables.",
+            "active": true,
+            "properties": {
+              "assignments": [
+                {
+                  "name": "ipCorrelationId",
+                  "value": "%gen_uuid%",
+                  "type": "String"
+                },
+                {
+                  "name": "actionMode",
+                  "value": "%input:action%",
+                  "type": "String",
+                  "defaultValue": "FULL_ELIGIBILITY"
+                },
+                {
+                  "name": "eligibilityDecision",
+                  "value": "PENDING",
+                  "type": "String"
+                },
+                {
+                  "name": "creditScore",
+                  "value": null,
+                  "type": "Integer"
+                },
+                {
+                  "name": "dti",
+                  "value": null,
+                  "type": "Decimal"
+                },
+                {
+                  "name": "approvalTier",
+                  "value": null,
+                  "type": "String"
+                },
+                {
+                  "name": "loanAppId",
+                  "value": null,
+                  "type": "String"
+                }
+              ]
+            }
+          },
+
+          {
+            "index": 2,
+            "type": "SetValues",
+            "name": "ValidateInputs",
+            "description": "Validate that required loan inputs are present and within acceptable ranges. Surface validation errors immediately rather than failing mid-pipeline.",
+            "active": true,
+            "properties": {
+              "validations": [
+                {
+                  "condition": "%input:AnnualIncome% > 0",
+                  "errorMessage": "Annual income must be greater than zero.",
+                  "errorPath": "ValidationError:annualIncome"
+                },
+                {
+                  "condition": "%input:MonthlyDebtPayments% >= 0",
+                  "errorMessage": "Monthly debt payments cannot be negative.",
+                  "errorPath": "ValidationError:monthlyDebt"
+                },
+                {
+                  "condition": "%actionMode% === 'CALCULATE_DTI' || (%input:RequestedAmount% > 0)",
+                  "errorMessage": "Requested loan amount must be greater than zero.",
+                  "errorPath": "ValidationError:requestedAmount"
+                },
+                {
+                  "condition": "%actionMode% === 'CALCULATE_DTI' || (%input:applicantId% != null)",
+                  "errorMessage": "Applicant ID is required for full eligibility check.",
+                  "errorPath": "ValidationError:applicantId"
+                }
+              ],
+              "onValidationFailure": "ReturnValidationErrors"
+            }
+          },
+
+          {
+            "index": 3,
+            "type": "ApexAction",
+            "name": "CalculateDTI",
+            "description": "Calls WealthManagementCallable.call('calcDebtToIncomeRatio') to compute the debt-to-income ratio. Pure calculation — no DML, no callout. Safe to run in both CALCULATE_DTI and FULL_ELIGIBILITY modes.",
+            "active": true,
+            "properties": {
+              "className": "WealthManagementCallable",
+              "methodName": "call",
+              "inputMap": {
+                "action":        "calcDebtToIncomeRatio",
+                "monthlyDebt":   "%input:MonthlyDebtPayments%",
+                "annualIncome":  "%input:AnnualIncome%"
+              },
+              "outputMap": {
+                "dti": "DTIResult:dti"
+              }
+            },
+            "onError": {
+              "action": "ThrowException",
+              "message": "DTI calculation failed: %error:message%"
+            }
+          },
+
+          {
+            "index": 4,
+            "type": "SetValues",
+            "name": "ClassifyDti",
+            "description": "Categorizes the DTI into LOW / MODERATE / HIGH for OmniScript warning display and downstream branching.",
+            "active": true,
+            "properties": {
+              "assignments": [
+                {
+                  "name": "dti",
+                  "value": "%DTIResult:dti%"
+                },
+                {
+                  "name": "dtiCategory",
+                  "value": "%dti% <= 36 ? 'LOW' : (%dti% <= 50 ? 'MODERATE' : 'HIGH')",
+                  "type": "String",
+                  "evaluateAsExpression": true
+                },
+                {
+                  "name": "dtiMessage",
+                  "value": "%dti% <= 36 ? 'Excellent — well within guidelines.' : (%dti% <= 50 ? 'Acceptable — manual review may apply.' : 'High — application likely requires manual review or may be declined.')",
+                  "type": "String",
+                  "evaluateAsExpression": true
+                }
+              ]
+            }
+          },
+
+          {
+            "index": 5,
+            "type": "Conditional",
+            "name": "EarlyExitForDTIOnlyMode",
+            "description": "If actionMode is CALCULATE_DTI (called from OmniScript Step 2 autoTrigger), return DTI result immediately without running credit check or DR Load. Saves callout quota and avoids premature credit pull.",
+            "active": true,
+            "properties": {
+              "condition": "%actionMode% === 'CALCULATE_DTI'",
+              "trueElements": [
+                {
+                  "index": "5a",
+                  "type": "Response",
+                  "name": "DTIOnlyResponse",
+                  "properties": {
+                    "output": {
+                      "dti":         "%dti%",
+                      "dtiCategory": "%dtiCategory%",
+                      "dtiMessage":  "%dtiMessage%",
+                      "ipStatus":    "DTI_CALCULATED",
+                      "correlationId": "%ipCorrelationId%"
+                    }
+                  }
+                }
+              ]
+            }
+          },
+
+          {
+            "index": 6,
+            "type": "ApexAction",
+            "name": "FetchCreditScore",
+            "description": "Calls WealthManagementCallable.call('fetchCreditScore') → CreditScoreService.fetchScore(). Named Credential CreditBureauNC is resolved inside the Callable. Makes one HTTP callout via Salesforce callout framework.",
+            "active": true,
+            "properties": {
+              "className": "WealthManagementCallable",
+              "methodName": "call",
+              "inputMap": {
+                "action":          "fetchCreditScore",
+                "applicantId":     "%input:applicantId%",
+                "namedCredential": "CreditBureauNC"
+              },
+              "outputMap": {
+                "score":   "CreditScoreResult:score",
+                "band":    "CreditScoreResult:band",
+                "factors": "CreditScoreResult:factors"
+              }
+            },
+            "onError": {
+              "action": "SetValueAndContinue",
+              "assignments": [
+                { "name": "CreditScoreResult:score", "value": null },
+                { "name": "CreditScoreResult:band",  "value": "UNKNOWN" },
+                { "name": "creditFetchError",         "value": "%error:message%" }
+              ],
+              "comment": "Credit API failure should not block loan application creation — decision becomes MANUAL_REVIEW when score is unavailable"
+            }
+          },
+
+          {
+            "index": 7,
+            "type": "SetValues",
+            "name": "SetCreditContext",
+            "description": "Move credit score from ApexAction output into IP-level context variables for downstream use.",
+            "active": true,
+            "properties": {
+              "assignments": [
+                { "name": "creditScore",    "value": "%CreditScoreResult:score%" },
+                { "name": "creditBand",     "value": "%CreditScoreResult:band%" },
+                { "name": "creditFetchedAt","value": "%now%" }
+              ]
+            }
+          },
+
+          {
+            "index": 8,
+            "type": "ApexAction",
+            "name": "RunEligibilityDecision",
+            "description": "Calls WealthManagementCallable.call('calculateLoanEligibility'). This invokes LoanEligibilityService.scoreEligibility() which uses cached credit score + DTI to produce AUTO_APPROVED / MANUAL_REVIEW / DECLINED. Note: at this point the LoanApplication__c record may not exist yet — the service will create it if loanAppId is null, or update it if provided.",
+            "active": true,
+            "properties": {
+              "className": "WealthManagementCallable",
+              "methodName": "call",
+              "inputMap": {
+                "action":          "calculateLoanEligibility",
+                "loanAppId":       "%loanAppId%",
+                "creditScore":     "%creditScore%",
+                "dti":             "%dti%",
+                "requestedAmount": "%input:RequestedAmount%",
+                "loanType":        "%input:LoanType%",
+                "annualIncome":    "%input:AnnualIncome%",
+                "monthlyDebt":     "%input:MonthlyDebtPayments%",
+                "applicantId":     "%input:applicantId%"
+              },
+              "outputMap": {
+                "decision":     "DecisionResult:decision",
+                "creditScore":  "DecisionResult:creditScore",
+                "dti":          "DecisionResult:dti",
+                "loanAppId":    "DecisionResult:loanAppId",
+                "approvalTier": "DecisionResult:approvalTier"
+              }
+            },
+            "onError": {
+              "action": "SetValueAndContinue",
+              "assignments": [
+                { "name": "DecisionResult:decision",  "value": "MANUAL_REVIEW" },
+                { "name": "DecisionResult:approvalTier", "value": "BRANCH_MANAGER" },
+                { "name": "decisionError",            "value": "%error:message%" }
+              ],
+              "comment": "Decision engine failure defaults to MANUAL_REVIEW so application is not silently dropped"
+            }
+          },
+
+          {
+            "index": 9,
+            "type": "SetValues",
+            "name": "FlattenDecisionResults",
+            "description": "Move ApexAction decision output into IP-level variables for DR Load and Response step.",
+            "active": true,
+            "properties": {
+              "assignments": [
+                { "name": "eligibilityDecision", "value": "%DecisionResult:decision%" },
+                { "name": "loanAppId",           "value": "%DecisionResult:loanAppId%" },
+                { "name": "approvalTier",        "value": "%DecisionResult:approvalTier%" },
+                {
+                  "name": "estimatedRate",
+                  "value": "%eligibilityDecision% === 'AUTO_APPROVED' ? (%creditBand% === 'EXCELLENT' ? 4.5 : (%creditBand% === 'VERY_GOOD' ? 5.25 : (%creditBand% === 'GOOD' ? 6.0 : 7.5))) : null",
+                  "type": "Decimal",
+                  "evaluateAsExpression": true,
+                  "comment": "Pre-qualification rate estimate based on credit band — not a binding offer"
+                }
+              ]
+            }
+          },
+
+          {
+            "index": 10,
+            "type": "DataRaptorLoadAction",
+            "name": "PersistLoanApplication",
+            "description": "Calls DR-Load-LoanDecisionLoad to upsert LoanApplication__c with full loan request details + eligibility decision. Uses ExternalId__c for idempotent upsert.",
+            "active": true,
+            "properties": {
+              "dataRaptorName": "DR-Load-LoanDecisionLoad",
+              "inputMap": {
+                "LoanRequest:ExternalId":         "%input:ExternalId%",
+                "LoanRequest:ApplicantId":        "%input:applicantId%",
+                "LoanRequest:LoanType":           "%input:LoanType%",
+                "LoanRequest:RequestedAmount":    "%input:RequestedAmount%",
+                "LoanRequest:LoanTermMonths":     "%input:LoanTermMonths%",
+                "LoanRequest:AnnualIncome":       "%input:AnnualIncome%",
+                "LoanRequest:MonthlyDebtPayments":"%input:MonthlyDebtPayments%",
+                "LoanRequest:CollateralType":     "%input:CollateralType%",
+                "LoanRequest:PropertyValue":      "%input:PropertyValue%",
+                "LoanRequest:PropertyAddress":    "%input:PropertyAddress%",
+                "LoanRequest:MortgagePurpose":    "%input:MortgagePurpose%",
+                "LoanRequest:VehicleMake":        "%input:VehicleMake%",
+                "LoanRequest:VehicleModel":       "%input:VehicleModel%",
+                "LoanRequest:VehicleYear":        "%input:VehicleYear%",
+                "LoanRequest:ConsentHardPull":    "%input:ConsentHardPull%",
+                "EligibilityResult:creditScore":  "%creditScore%",
+                "EligibilityResult:dti":          "%dti%",
+                "EligibilityResult:decision":     "%eligibilityDecision%",
+                "EligibilityResult:approvalTier": "%approvalTier%",
+                "EligibilityResult:estimatedRate":"%estimatedRate%",
+                "EligibilityResult:creditScoreFetchedAt": "%creditFetchedAt%",
+                "EligibilityResult:evaluatedAt":  "%now%"
+              },
+              "outputMap": {
+                "loanAppId":   "PersistResult:loanAppId",
+                "loanAppName": "PersistResult:loanAppName"
+              }
+            },
+            "onError": {
+              "action": "ThrowException",
+              "message": "Failed to persist loan application. Correlation: %ipCorrelationId%. Error: %error:message%"
+            }
+          },
+
+          {
+            "index": 11,
+            "type": "SetValues",
+            "name": "UpdateLoanAppId",
+            "description": "Update loanAppId with the Id returned from the DR Load (in case it was newly created).",
+            "active": true,
+            "properties": {
+              "assignments": [
+                {
+                  "name": "loanAppId",
+                  "value": "%PersistResult:loanAppId% || %loanAppId%",
+                  "evaluateAsExpression": true
+                },
+                {
+                  "name": "loanAppName",
+                  "value": "%PersistResult:loanAppName%"
+                }
+              ]
+            }
+          },
+
+          {
+            "index": 12,
+            "type": "Conditional",
+            "name": "ApprovalRoutingGate",
+            "description": "Submit to Salesforce approval process only when decision is MANUAL_REVIEW and the loan was successfully persisted. AUTO_APPROVED and DECLINED do not require human approval.",
+            "active": true,
+            "properties": {
+              "condition": "%eligibilityDecision% === 'MANUAL_REVIEW' && %loanAppId% != null",
+              "trueElements": [
+                {
+                  "index": "12a",
+                  "type": "ApexAction",
+                  "name": "SubmitForApproval",
+                  "description": "Calls WealthManagementCallable.call('calculateLoanEligibility') with the persisted loanAppId to trigger LoanEligibilityService.routeToApproval().",
+                  "properties": {
+                    "className": "WealthManagementCallable",
+                    "methodName": "call",
+                    "inputMap": {
+                      "action":    "calculateLoanEligibility",
+                      "loanAppId": "%loanAppId%"
+                    },
+                    "outputMap": {
+                      "approvalTier": "ApprovalResult:tier"
+                    }
+                  },
+                  "onError": {
+                    "action": "SetValueAndContinue",
+                    "assignments": [
+                      { "name": "approvalSubmitError", "value": "%error:message%" }
+                    ],
+                    "comment": "Approval submission failure is non-fatal — record is persisted and advisor can manually submit"
+                  }
+                }
+              ]
+            }
+          },
+
+          {
+            "index": 13,
+            "type": "Conditional",
+            "name": "NotificationGate",
+            "description": "Send advisor notification email for MANUAL_REVIEW decisions, and confirmation email to applicant for all decisions.",
+            "active": true,
+            "properties": {
+              "condition": "%loanAppId% != null",
+              "trueElements": [
+                {
+                  "index": "13a",
+                  "type": "HTTPAction",
+                  "name": "SendApplicantConfirmation",
+                  "description": "Calls internal notification service (or Salesforce Messaging) to send applicant confirmation email.",
+                  "properties": {
+                    "namedCredential": "InternalNotificationNC",
+                    "endpoint": "/v1/notifications/email",
+                    "method": "POST",
+                    "headers": { "Content-Type": "application/json" },
+                    "body": {
+                      "templateType":     "LOAN_APPLICATION_SUBMITTED",
+                      "recipientEmail":   "%input:applicantEmail%",
+                      "loanAppId":        "%loanAppId%",
+                      "loanAppName":      "%loanAppName%",
+                      "decision":         "%eligibilityDecision%",
+                      "approvalTier":     "%approvalTier%",
+                      "estimatedRate":    "%estimatedRate%"
+                    },
+                    "timeout": 5000
+                  },
+                  "onError": {
+                    "action": "SetValueAndContinue",
+                    "comment": "Email failure should never block loan application confirmation"
+                  }
+                }
+              ]
+            }
+          },
+
+          {
+            "index": 14,
+            "type": "Response",
+            "name": "IPResponse",
+            "description": "Returns the full eligibility result to the LoanApplication OmniScript. Output keys map to OmniScript EligibilityResult:* context paths used by the three outcome Conditional elements.",
+            "active": true,
+            "properties": {
+              "output": {
+                "decision":      "%eligibilityDecision%",
+                "creditScore":   "%creditScore%",
+                "creditBand":    "%creditBand%",
+                "dti":           "%dti%",
+                "dtiCategory":   "%dtiCategory%",
+                "loanAppId":     "%loanAppId%",
+                "loanAppName":   "%loanAppName%",
+                "approvalTier":  "%approvalTier%",
+                "estimatedRate": "%estimatedRate%",
+                "ipStatus":      "SUCCESS",
+                "correlationId": "%ipCorrelationId%"
+              }
+            }
+          }
+        ],
+
+        "ErrorHandling": {
+          "globalOnError": {
+            "action": "ReturnError",
+            "output": {
+              "decision":      "MANUAL_REVIEW",
+              "ipStatus":      "ERROR",
+              "errorMessage":  "%error:message%",
+              "correlationId": "%ipCorrelationId%"
+            },
+            "comment": "Global error defaults to MANUAL_REVIEW so no application is silently dropped. A loan officer receives the case for investigation."
+          }
+        }
+      }
+    }
+  ],
+
+  "interviewNotes": {
+    "dualModePurpose": "This IP handles two distinct call patterns from the OmniScript: (1) CALCULATE_DTI — called on Step 2 load via autoTrigger:true, executes only steps 1–5 and returns immediately with DTI info; (2) FULL_ELIGIBILITY — called on Step 3 Submit, runs the full pipeline through step 14. This avoids duplicating orchestration logic across two separate IPs.",
+    "earlyExitPattern": "Step 5 (EarlyExitForDTIOnlyMode) checks actionMode === 'CALCULATE_DTI' and returns a Response immediately via a trueElement. OmniStudio IP execution stops at a Response element, so steps 6–14 never run in DTI-only mode. This is the IP equivalent of an early return statement.",
+    "apexCallableOrchestration": "Steps 3, 6, 8, and 12a all call WealthManagementCallable with different action values. The Callable routes each to the correct Apex service method. This is the OmniStudio → Apex integration pattern — IPs cannot call Apex directly except through Callable or @InvocableMethod.",
+    "creditFetchErrorHandling": "Step 6 (FetchCreditScore) uses SetValueAndContinue on error — a Credit Bureau outage causes the score to be null, and step 8 (RunEligibilityDecision) then sets decision = MANUAL_REVIEW (LoanEligibilityService.determineDecision returns DECLINED for null score, so the IP override at step 8 onError catches this and routes to MANUAL_REVIEW instead). Applicant is not falsely declined due to API failure.",
+    "estimatedRateFormula": "Step 9 computes a pre-qualification rate estimate inline using a nested ternary expression — EXCELLENT:4.5%, VERY_GOOD:5.25%, GOOD:6.0%, other:7.5%. This is not a binding rate but gives the applicant a real-time indication. In production, this would be a CMDT lookup for configurable rate tiers.",
+    "drLoadPlacement": "The DataRaptor Load (step 10) runs after the Callable decision (step 8), not before. This means the LoanApplication__c record is written once with the final decision already populated — no partial write followed by an update. One upsert, final state.",
+    "globalErrorDefaultsToManualReview": "The globalOnError returns decision:MANUAL_REVIEW so any unhandled exception routes the application to a human reviewer rather than silently failing. This satisfies the bank's regulatory requirement that no loan application can be dropped without human review.",
+    "correlationIdTracing": "ipCorrelationId flows through all error messages, the Response output, and the notification payload. An advisor can take the ID from the LoanApplication__c record and search OmniStudio IP execution logs or Apex debug logs to trace the exact execution path of that specific application."
+  }
+}
