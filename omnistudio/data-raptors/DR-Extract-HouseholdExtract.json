@@ -1,0 +1,201 @@
+{
+  "warning": "OmniStudio DataRaptor Data Pack format. Import via OmniStudio Designer > DataRaptor > Import.",
+  "DataPacks": [
+    {
+      "VlocityDataPackType": "DataRaptor",
+      "VlocityDataPackName": "DR-Extract-HouseholdExtract",
+      "VlocityDataPackKey": "DataRaptor/DR-Extract-HouseholdExtract",
+      "VlocityDataPackStatus": "Success",
+      "VlocityDataPackData": {
+        "Name": "DR-Extract-HouseholdExtract",
+        "InterfaceType": "Extract",
+        "Description": "Extracts a complete household view: Account (household), all active FinancialAccount__c records with their FinancialHolding__c positions, and AssetsAndLiabilities__c. Used by the Household 360 FlexCard and ClientOnboardingIP Integration Procedure.",
+        "InterfaceSourceType": "SalesforceObject",
+        "RootObject": "Account",
+
+        "Objects": [
+          {
+            "objectName": "Account",
+            "alias": "Household",
+            "level": 0,
+            "fields": [
+              { "fieldName": "Id",          "alias": "householdId" },
+              { "fieldName": "Name",         "alias": "householdName" },
+              { "fieldName": "NetWorth__c",  "alias": "netWorth" },
+              { "fieldName": "OwnerId",      "alias": "advisorId" },
+              { "fieldName": "Owner.Name",   "alias": "advisorName" },
+              { "fieldName": "BillingStreet",  "alias": "street" },
+              { "fieldName": "BillingCity",    "alias": "city" },
+              { "fieldName": "BillingState",   "alias": "state" },
+              { "fieldName": "BillingPostalCode", "alias": "zip" },
+              { "fieldName": "Phone",          "alias": "phone" },
+              { "fieldName": "CreatedDate",    "alias": "memberSince" }
+            ],
+            "filter": {
+              "conditions": []
+            }
+          },
+
+          {
+            "objectName": "FinancialAccount__c",
+            "alias": "FinancialAccounts",
+            "level": 1,
+            "parentObject": "Account",
+            "relationshipField": "Account__c",
+            "relationshipType": "Lookup",
+            "fields": [
+              { "fieldName": "Id",                    "alias": "faId" },
+              { "fieldName": "Name",                  "alias": "faName" },
+              { "fieldName": "AccountType__c",         "alias": "accountType" },
+              { "fieldName": "Balance__c",             "alias": "balance" },
+              { "fieldName": "IsActive__c",            "alias": "isActive" },
+              { "fieldName": "ExternalAccountId__c",   "alias": "externalId" },
+              { "fieldName": "LastSyncedDateTime__c",  "alias": "lastSynced" }
+            ],
+            "filter": {
+              "conditions": [
+                {
+                  "field": "IsActive__c",
+                  "operator": "=",
+                  "value": "true",
+                  "valueType": "Boolean"
+                }
+              ]
+            },
+            "orderBy": [
+              { "field": "Balance__c", "direction": "DESC" }
+            ],
+            "limit": 50
+          },
+
+          {
+            "objectName": "FinancialHolding__c",
+            "alias": "Holdings",
+            "level": 2,
+            "parentObject": "FinancialAccount__c",
+            "relationshipField": "FinancialAccount__c",
+            "relationshipType": "Lookup",
+            "fields": [
+              { "fieldName": "Id",               "alias": "holdingId" },
+              { "fieldName": "Name",             "alias": "holdingName" },
+              { "fieldName": "Symbol__c",        "alias": "symbol" },
+              { "fieldName": "Quantity__c",      "alias": "quantity" },
+              { "fieldName": "MarketValue__c",   "alias": "marketValue" },
+              { "fieldName": "CostBasis__c",     "alias": "costBasis" },
+              { "fieldName": "AssetClass__c",    "alias": "assetClass" },
+              { "fieldName": "UnrealizedGainLoss__c", "alias": "unrealizedGainLoss" }
+            ],
+            "filter": {
+              "conditions": []
+            },
+            "orderBy": [
+              { "field": "MarketValue__c", "direction": "DESC" }
+            ],
+            "limit": 200
+          },
+
+          {
+            "objectName": "AssetsAndLiabilities__c",
+            "alias": "AssetsAndLiabilities",
+            "level": 1,
+            "parentObject": "Account",
+            "relationshipField": "Account__c",
+            "relationshipType": "Lookup",
+            "fields": [
+              { "fieldName": "Id",               "alias": "aalId" },
+              { "fieldName": "Name",             "alias": "aalName" },
+              { "fieldName": "Type__c",          "alias": "type" },
+              { "fieldName": "Category__c",      "alias": "category" },
+              { "fieldName": "Amount__c",        "alias": "amount" },
+              { "fieldName": "IsAsset__c",       "alias": "isAsset" },
+              { "fieldName": "Description__c",   "alias": "description" }
+            ],
+            "filter": {
+              "conditions": []
+            },
+            "orderBy": [
+              { "field": "Amount__c", "direction": "DESC" }
+            ]
+          }
+        ],
+
+        "InputParameters": [
+          {
+            "name": "householdId",
+            "dataType": "String",
+            "required": true,
+            "description": "Salesforce Account Id of the household. Used as root filter: Account.Id = :householdId"
+          }
+        ],
+
+        "RootFilter": {
+          "field": "Id",
+          "operator": "=",
+          "inputParameter": "householdId"
+        },
+
+        "OutputNode": "HouseholdData",
+
+        "OutputStructure": {
+          "HouseholdData": {
+            "householdId":      "Account.Id",
+            "householdName":    "Account.Name",
+            "netWorth":         "Account.NetWorth__c",
+            "advisorId":        "Account.OwnerId",
+            "advisorName":      "Account.Owner.Name",
+            "memberSince":      "Account.CreatedDate",
+            "financialAccounts": {
+              "type": "array",
+              "source": "FinancialAccount__c",
+              "fields": {
+                "faId":         "FinancialAccount__c.Id",
+                "faName":       "FinancialAccount__c.Name",
+                "accountType":  "FinancialAccount__c.AccountType__c",
+                "balance":      "FinancialAccount__c.Balance__c",
+                "isActive":     "FinancialAccount__c.IsActive__c",
+                "externalId":   "FinancialAccount__c.ExternalAccountId__c",
+                "lastSynced":   "FinancialAccount__c.LastSyncedDateTime__c",
+                "holdings": {
+                  "type": "array",
+                  "source": "FinancialHolding__c",
+                  "fields": {
+                    "holdingId":         "FinancialHolding__c.Id",
+                    "symbol":            "FinancialHolding__c.Symbol__c",
+                    "quantity":          "FinancialHolding__c.Quantity__c",
+                    "marketValue":       "FinancialHolding__c.MarketValue__c",
+                    "costBasis":         "FinancialHolding__c.CostBasis__c",
+                    "assetClass":        "FinancialHolding__c.AssetClass__c",
+                    "unrealizedGainLoss":"FinancialHolding__c.UnrealizedGainLoss__c"
+                  }
+                }
+              }
+            },
+            "assetsAndLiabilities": {
+              "type": "array",
+              "source": "AssetsAndLiabilities__c",
+              "fields": {
+                "aalId":       "AssetsAndLiabilities__c.Id",
+                "aalName":     "AssetsAndLiabilities__c.Name",
+                "type":        "AssetsAndLiabilities__c.Type__c",
+                "category":    "AssetsAndLiabilities__c.Category__c",
+                "amount":      "AssetsAndLiabilities__c.Amount__c",
+                "isAsset":     "AssetsAndLiabilities__c.IsAsset__c",
+                "description": "AssetsAndLiabilities__c.Description__c"
+              }
+            }
+          }
+        }
+      }
+    }
+  ],
+
+  "interviewNotes": {
+    "whyDataRaptorExtractOverSOQL": "DataRaptor Extract retrieves related objects across multiple levels (Account → FinancialAccount__c → FinancialHolding__c) in a single declarative definition. The equivalent Apex would require 3+ SOQL queries with manual map stitching. The DR handles the join and output structure automatically.",
+    "filterOnIsActive": "FinancialAccount__c is filtered to IsActive__c = true at the DR level — closed accounts are excluded from the household view without any Apex code.",
+    "levelHierarchy": "Level 0 = root (Account), Level 1 = direct children (FinancialAccount__c, AssetsAndLiabilities__c), Level 2 = grandchildren (FinancialHolding__c under FinancialAccount__c). OmniStudio resolves these as separate SOQL queries and assembles the output JSON tree.",
+    "inputParameter": "householdId is passed from the Integration Procedure or FlexCard as an input. The DR uses it as the WHERE Id = :householdId filter on Account.",
+    "outputNode": "The OutputNode 'HouseholdData' becomes the root key in the IP/FlexCard context. Downstream elements reference it as HouseholdData:financialAccounts, HouseholdData:netWorth, etc.",
+    "limitClause": "FinancialAccount__c limited to 50, Holdings to 200 — protects against households with very large portfolios hitting heap limits. In production, use TurboExtract for queries > 2,000 records.",
+    "orderBy": "Financial accounts ordered by Balance DESC so the FlexCard renders the highest-value accounts first without additional sorting logic."
+  }
+}
