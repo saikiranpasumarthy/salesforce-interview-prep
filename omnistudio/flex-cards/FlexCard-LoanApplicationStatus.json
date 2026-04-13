@@ -1,0 +1,620 @@
+{
+  "warning": "OmniStudio FlexCard Data Pack format. Import via OmniStudio Designer > FlexCards > Import.",
+  "DataPacks": [
+    {
+      "VlocityDataPackType": "FlexCard",
+      "VlocityDataPackName": "LoanApplicationStatus",
+      "VlocityDataPackKey": "FlexCard/LoanApplicationStatus",
+      "VlocityDataPackStatus": "Success",
+      "VlocityDataPackData": {
+        "Name": "LoanApplicationStatus",
+        "Author": "Wealth Management Team",
+        "Description": "Loan Application Status FlexCard. Placed on the LoanApplication__c record page. Displays current status, eligibility decision, credit score with band visualization, DTI gauge, approval tier, estimated rate, and timeline of key dates. Also placed in a related list on Account pages to show all applications for a household. Provides action buttons for loan officers: Submit for Review, Request Documents, Record Decision.",
+        "Version": 1,
+        "Active": true,
+
+        "DataSource": {
+          "type": "DataRaptorExtract",
+          "name": "DR-Extract-LoanApplicationDetail",
+          "comment": "A dedicated Extract DR for LoanApplication__c detail — queries all fields needed for this card including related Account (applicant name, household). Not the same as HouseholdExtract.",
+          "inputMap": {
+            "loanAppId": "{recordId}"
+          },
+          "outputNode": "LoanAppData",
+          "refreshOnAction": true,
+          "cacheEnabled": false,
+          "comment2": "No cache on loan application — status changes frequently and must be real-time"
+        },
+
+        "Theme": {
+          "layout": "card",
+          "cardBorder": true,
+          "cardShadow": true,
+          "padding": "medium",
+          "headerBackground": "#1B5E20",
+          "headerTextColor": "#FFFFFF"
+        },
+
+        "States": [
+          {
+            "name": "default",
+            "label": "Default",
+            "isDefault": true,
+            "components": [
+
+              {
+                "type": "header",
+                "name": "LoanAppHeader",
+                "order": 1,
+                "properties": {
+                  "title": "{LoanAppData.loanAppName}",
+                  "subtitle": "{LoanAppData.loanType} — {LoanAppData.applicantName}",
+                  "icon": {
+                    "type": "salesforce",
+                    "name": "loan",
+                    "size": "medium"
+                  }
+                }
+              },
+
+              {
+                "type": "fieldset",
+                "name": "StatusBanner",
+                "order": 2,
+                "properties": {
+                  "layout": "horizontal",
+                  "columns": 2
+                },
+                "children": [
+                  {
+                    "type": "badge",
+                    "name": "StatusBadge",
+                    "properties": {
+                      "label": "Status",
+                      "value": "{LoanAppData.status}",
+                      "size": "large",
+                      "variant": {
+                        "expression": "{LoanAppData.status} === 'APPROVED' || {LoanAppData.status} === 'FUNDED' ? 'success' : ({LoanAppData.status} === 'DECLINED' ? 'error' : ({LoanAppData.status} === 'IN_REVIEW' ? 'warning' : 'inverse'))"
+                      }
+                    }
+                  },
+                  {
+                    "type": "badge",
+                    "name": "DecisionBadge",
+                    "properties": {
+                      "label": "Eligibility",
+                      "value": "{LoanAppData.eligibilityDecision}",
+                      "size": "large",
+                      "variant": {
+                        "expression": "{LoanAppData.eligibilityDecision} === 'AUTO_APPROVED' ? 'success' : ({LoanAppData.eligibilityDecision} === 'DECLINED' ? 'error' : ({LoanAppData.eligibilityDecision} === 'MANUAL_REVIEW' ? 'warning' : 'inverse'))"
+                      }
+                    }
+                  }
+                ]
+              },
+
+              {
+                "type": "divider",
+                "name": "Divider1",
+                "order": 3
+              },
+
+              {
+                "type": "fieldset",
+                "name": "LoanDetails",
+                "order": 4,
+                "properties": {
+                  "label": "Loan Details",
+                  "layout": "horizontal",
+                  "columns": 3
+                },
+                "children": [
+                  {
+                    "type": "field",
+                    "name": "RequestedAmountField",
+                    "properties": {
+                      "label": "Requested Amount",
+                      "value": "{LoanAppData.requestedAmount}",
+                      "format": "currency",
+                      "currencyCode": "USD",
+                      "fontWeight": "bold",
+                      "fontSize": "large"
+                    }
+                  },
+                  {
+                    "type": "field",
+                    "name": "LoanTypeField",
+                    "properties": {
+                      "label": "Loan Type",
+                      "value": "{LoanAppData.loanType}"
+                    }
+                  },
+                  {
+                    "type": "field",
+                    "name": "LoanTermField",
+                    "properties": {
+                      "label": "Term",
+                      "value": "{LoanAppData.loanTermMonths} months",
+                      "format": "string"
+                    }
+                  }
+                ]
+              },
+
+              {
+                "type": "divider",
+                "name": "Divider2",
+                "order": 5
+              },
+
+              {
+                "type": "text",
+                "name": "EligibilityHeader",
+                "order": 6,
+                "properties": {
+                  "value": "Eligibility Assessment",
+                  "fontSize": "medium",
+                  "fontWeight": "bold"
+                }
+              },
+
+              {
+                "type": "fieldset",
+                "name": "EligibilityDetails",
+                "order": 7,
+                "properties": {
+                  "layout": "horizontal",
+                  "columns": 3
+                },
+                "children": [
+                  {
+                    "type": "metric",
+                    "name": "CreditScoreMetric",
+                    "properties": {
+                      "label": "Credit Score",
+                      "value": "{LoanAppData.creditScore}",
+                      "format": "number",
+                      "fontSize": "x-large",
+                      "fontWeight": "bold",
+                      "textColor": {
+                        "expression": "{LoanAppData.creditScore} >= 720 ? '#1B5E20' : ({LoanAppData.creditScore} >= 620 ? '#E65100' : '#B71C1C')"
+                      },
+                      "subtext": "{LoanAppData.creditBand}",
+                      "subtextColor": "#706E6B"
+                    }
+                  },
+                  {
+                    "type": "progressBar",
+                    "name": "CreditScoreBar",
+                    "properties": {
+                      "label": "Score Range",
+                      "value": {
+                        "expression": "({LoanAppData.creditScore} - 300) / 550 * 100",
+                        "comment": "Normalize 300–850 FICO scale to 0–100% for progress bar"
+                      },
+                      "min": 0,
+                      "max": 100,
+                      "thresholds": [
+                        { "value": 58, "color": "#B71C1C", "label": "Poor" },
+                        { "value": 69, "color": "#E65100", "label": "Fair" },
+                        { "value": 80, "color": "#F9A825", "label": "Good" },
+                        { "value": 92, "color": "#2E7D32", "label": "Very Good" },
+                        { "value": 100, "color": "#1B5E20", "label": "Excellent" }
+                      ],
+                      "showValue": true
+                    }
+                  },
+                  {
+                    "type": "metric",
+                    "name": "DTIMetric",
+                    "properties": {
+                      "label": "Debt-to-Income",
+                      "value": "{LoanAppData.debtToIncomeRatio}",
+                      "format": "percent",
+                      "decimalPlaces": 1,
+                      "fontSize": "x-large",
+                      "fontWeight": "bold",
+                      "textColor": {
+                        "expression": "{LoanAppData.debtToIncomeRatio} <= 36 ? '#1B5E20' : ({LoanAppData.debtToIncomeRatio} <= 50 ? '#E65100' : '#B71C1C')"
+                      },
+                      "subtext": {
+                        "expression": "{LoanAppData.debtToIncomeRatio} <= 36 ? 'LOW' : ({LoanAppData.debtToIncomeRatio} <= 50 ? 'MODERATE' : 'HIGH')"
+                      }
+                    }
+                  }
+                ]
+              },
+
+              {
+                "type": "fieldset",
+                "name": "RateAndTier",
+                "order": 8,
+                "properties": {
+                  "layout": "horizontal",
+                  "columns": 3
+                },
+                "children": [
+                  {
+                    "type": "field",
+                    "name": "EstimatedRateField",
+                    "properties": {
+                      "label": "Est. Interest Rate",
+                      "value": {
+                        "expression": "{LoanAppData.estimatedInterestRate} != null ? {LoanAppData.estimatedInterestRate} + '%' : 'Pending'"
+                      },
+                      "fontWeight": "bold",
+                      "textColor": "#032D60",
+                      "helpText": "Pre-qualification estimate only. Not a binding rate offer."
+                    }
+                  },
+                  {
+                    "type": "field",
+                    "name": "ApprovalTierField",
+                    "properties": {
+                      "label": "Approval Tier",
+                      "value": {
+                        "expression": "{LoanAppData.approvalTier} != null ? {LoanAppData.approvalTier} : 'N/A'"
+                      }
+                    }
+                  },
+                  {
+                    "type": "field",
+                    "name": "AnnualIncomeField",
+                    "properties": {
+                      "label": "Annual Income",
+                      "value": "{LoanAppData.annualIncome}",
+                      "format": "currency",
+                      "currencyCode": "USD"
+                    }
+                  }
+                ]
+              },
+
+              {
+                "type": "divider",
+                "name": "Divider3",
+                "order": 9
+              },
+
+              {
+                "type": "text",
+                "name": "TimelineHeader",
+                "order": 10,
+                "properties": {
+                  "value": "Application Timeline",
+                  "fontSize": "medium",
+                  "fontWeight": "bold"
+                }
+              },
+
+              {
+                "type": "timeline",
+                "name": "ApplicationTimeline",
+                "order": 11,
+                "properties": {
+                  "items": [
+                    {
+                      "label": "Application Created",
+                      "date": "{LoanAppData.createdDate}",
+                      "icon": "utility:new",
+                      "iconVariant": "success",
+                      "show": true
+                    },
+                    {
+                      "label": "Submitted for Review",
+                      "date": "{LoanAppData.submittedDate}",
+                      "icon": "utility:send",
+                      "iconVariant": "success",
+                      "show": "{LoanAppData.status} !== 'DRAFT'"
+                    },
+                    {
+                      "label": "Eligibility Evaluated",
+                      "date": "{LoanAppData.eligibilityEvaluatedAt}",
+                      "icon": "utility:check",
+                      "iconVariant": {
+                        "expression": "{LoanAppData.eligibilityDecision} === 'AUTO_APPROVED' ? 'success' : ({LoanAppData.eligibilityDecision} === 'DECLINED' ? 'error' : 'warning')"
+                      },
+                      "show": "{LoanAppData.eligibilityEvaluatedAt} != null"
+                    },
+                    {
+                      "label": "Credit Score Fetched",
+                      "date": "{LoanAppData.creditScoreFetchedAt}",
+                      "icon": "utility:metrics",
+                      "iconVariant": "inverse",
+                      "show": "{LoanAppData.creditScoreFetchedAt} != null"
+                    },
+                    {
+                      "label": "Submitted for Approval",
+                      "date": "{LoanAppData.approvalSubmittedDate}",
+                      "icon": "utility:routing_offline",
+                      "iconVariant": "warning",
+                      "show": "{LoanAppData.approvalTier} != null"
+                    },
+                    {
+                      "label": "Final Decision",
+                      "date": "{LoanAppData.decisionDate}",
+                      "icon": {
+                        "expression": "{LoanAppData.status} === 'APPROVED' || {LoanAppData.status} === 'FUNDED' ? 'utility:success' : 'utility:close'"
+                      },
+                      "iconVariant": {
+                        "expression": "{LoanAppData.status} === 'APPROVED' || {LoanAppData.status} === 'FUNDED' ? 'success' : 'error'"
+                      },
+                      "show": "{LoanAppData.status} === 'APPROVED' || {LoanAppData.status} === 'DECLINED' || {LoanAppData.status} === 'FUNDED'"
+                    }
+                  ]
+                }
+              },
+
+              {
+                "type": "divider",
+                "name": "Divider4",
+                "order": 12
+              },
+
+              {
+                "type": "conditionalContainer",
+                "name": "MortgageDetails",
+                "order": 13,
+                "properties": {
+                  "showWhen": "{LoanAppData.loanType} === 'MORTGAGE'",
+                  "label": "Mortgage Details"
+                },
+                "children": [
+                  {
+                    "type": "fieldset",
+                    "name": "MortgageFieldset",
+                    "properties": {
+                      "layout": "horizontal",
+                      "columns": 3
+                    },
+                    "children": [
+                      {
+                        "type": "field",
+                        "name": "PropertyValueField",
+                        "properties": {
+                          "label": "Property Value",
+                          "value": "{LoanAppData.propertyValue}",
+                          "format": "currency"
+                        }
+                      },
+                      {
+                        "type": "field",
+                        "name": "LTVField",
+                        "properties": {
+                          "label": "Loan-to-Value",
+                          "value": {
+                            "expression": "{LoanAppData.propertyValue} > 0 ? ({LoanAppData.requestedAmount} / {LoanAppData.propertyValue} * 100).toFixed(1) + '%' : 'N/A'"
+                          },
+                          "helpText": "LTV = Requested Amount / Property Value × 100. Below 80% avoids PMI."
+                        }
+                      },
+                      {
+                        "type": "field",
+                        "name": "MortgagePurposeField",
+                        "properties": {
+                          "label": "Purpose",
+                          "value": "{LoanAppData.mortgagePurpose}"
+                        }
+                      }
+                    ]
+                  }
+                ]
+              },
+
+              {
+                "type": "actionbar",
+                "name": "LoanOfficerActions",
+                "order": 14,
+                "properties": {
+                  "alignment": "right"
+                },
+                "children": [
+                  {
+                    "type": "button",
+                    "name": "SubmitForReviewBtn",
+                    "properties": {
+                      "label": "Submit for Review",
+                      "variant": "brand",
+                      "iconName": "utility:send",
+                      "showWhen": "{LoanAppData.status} === 'DRAFT'",
+                      "action": {
+                        "type": "invoke",
+                        "ipName": "LoanEligibilityIP",
+                        "inputMap": {
+                          "action":          "FULL_ELIGIBILITY",
+                          "loanAppId":       "{recordId}",
+                          "applicantId":     "{LoanAppData.applicantId}",
+                          "LoanType":        "{LoanAppData.loanType}",
+                          "RequestedAmount": "{LoanAppData.requestedAmount}",
+                          "AnnualIncome":    "{LoanAppData.annualIncome}",
+                          "MonthlyDebtPayments": "{LoanAppData.monthlyDebtPayments}"
+                        },
+                        "refreshCard": true,
+                        "confirmationRequired": true,
+                        "confirmationMessage": "This will submit the application for eligibility evaluation and create a credit inquiry. Proceed?",
+                        "loadingMessage": "Evaluating eligibility..."
+                      }
+                    }
+                  },
+                  {
+                    "type": "button",
+                    "name": "RequestDocsBtn",
+                    "properties": {
+                      "label": "Request Documents",
+                      "variant": "neutral",
+                      "iconName": "utility:file",
+                      "showWhen": "{LoanAppData.status} === 'IN_REVIEW'",
+                      "action": {
+                        "type": "navigate",
+                        "target": "omniScript",
+                        "scriptType": "RequestDocuments",
+                        "subType": "LoanApplication",
+                        "language": "English",
+                        "inputMap": {
+                          "loanAppId":    "{recordId}",
+                          "applicantId":  "{LoanAppData.applicantId}"
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "type": "button",
+                    "name": "RecordDecisionBtn",
+                    "properties": {
+                      "label": "Record Decision",
+                      "variant": "success",
+                      "iconName": "utility:check",
+                      "showWhen": "{LoanAppData.status} === 'IN_REVIEW'",
+                      "action": {
+                        "type": "navigate",
+                        "target": "omniScript",
+                        "scriptType": "RecordLoanDecision",
+                        "subType": "LoanApplication",
+                        "language": "English",
+                        "inputMap": {
+                          "loanAppId":      "{recordId}",
+                          "approvalTier":   "{LoanAppData.approvalTier}",
+                          "currentDecision":"{LoanAppData.eligibilityDecision}"
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "type": "button",
+                    "name": "ViewApplicantBtn",
+                    "properties": {
+                      "label": "View Applicant",
+                      "variant": "neutral",
+                      "iconName": "utility:user",
+                      "action": {
+                        "type": "navigate",
+                        "target": "record",
+                        "recordId": "{LoanAppData.applicantId}"
+                      }
+                    }
+                  },
+                  {
+                    "type": "menu",
+                    "name": "MoreActionsMenu",
+                    "properties": {
+                      "label": "More Actions",
+                      "variant": "border-filled",
+                      "iconName": "utility:down",
+                      "items": [
+                        {
+                          "label": "Print Application Summary",
+                          "iconName": "utility:print",
+                          "action": {
+                            "type": "invoke",
+                            "ipName": "PrintLoanSummaryIP",
+                            "inputMap": { "loanAppId": "{recordId}" }
+                          }
+                        },
+                        {
+                          "label": "Clone Application",
+                          "iconName": "utility:copy",
+                          "action": {
+                            "type": "navigate",
+                            "target": "omniScript",
+                            "scriptType": "LoanApplication",
+                            "subType": "WealthManagement",
+                            "language": "English",
+                            "inputMap": {
+                              "cloneFromId": "{recordId}",
+                              "applicantId": "{LoanAppData.applicantId}"
+                            }
+                          }
+                        },
+                        {
+                          "label": "Generate Adverse Action Notice",
+                          "iconName": "utility:document",
+                          "showWhen": "{LoanAppData.status} === 'DECLINED'",
+                          "action": {
+                            "type": "invoke",
+                            "ipName": "GenerateAdverseActionIP",
+                            "inputMap": {
+                              "loanAppId":    "{recordId}",
+                              "applicantId":  "{LoanAppData.applicantId}"
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+
+          {
+            "name": "loading",
+            "label": "Loading",
+            "isDefault": false,
+            "components": [
+              {
+                "type": "spinner",
+                "name": "LoadingSpinner",
+                "properties": {
+                  "size": "medium",
+                  "assistiveText": "Loading loan application data..."
+                }
+              }
+            ]
+          },
+
+          {
+            "name": "error",
+            "label": "Error",
+            "isDefault": false,
+            "components": [
+              {
+                "type": "text",
+                "name": "ErrorMessage",
+                "properties": {
+                  "value": "Unable to load loan application data. Please refresh the page.",
+                  "textColor": "#C62828",
+                  "icon": "utility:error"
+                }
+              }
+            ]
+          }
+        ],
+
+        "RelatedListSettings": {
+          "parentObject": "Account",
+          "relationshipField": "Applicant__c",
+          "displayColumns": [
+            { "fieldPath": "loanAppName",          "label": "Application #" },
+            { "fieldPath": "loanType",             "label": "Type" },
+            { "fieldPath": "requestedAmount",      "label": "Amount",    "format": "currency" },
+            { "fieldPath": "status",               "label": "Status",    "format": "badge" },
+            { "fieldPath": "eligibilityDecision",  "label": "Decision",  "format": "badge" },
+            { "fieldPath": "creditScore",          "label": "Score" },
+            { "fieldPath": "debtToIncomeRatio",    "label": "DTI",       "format": "percent" }
+          ],
+          "sortField": "createdDate",
+          "sortDirection": "DESC",
+          "maxRows": 10
+        },
+
+        "RecordPageSettings": {
+          "placementHint": "main",
+          "targetObjects": ["LoanApplication__c"],
+          "tabLabel": "Loan Status"
+        }
+      }
+    }
+  ],
+
+  "interviewNotes": {
+    "dualPlacement": "This FlexCard is placed in two contexts: (1) as the main component on the LoanApplication__c record page (RecordPageSettings.targetObjects), (2) as a related list card on the Account page showing all loan applications (RelatedListSettings). The same card definition serves both — the difference is how the dataSource recordId is resolved.",
+    "noCacheOnLoanApp": "cacheEnabled:false because loan status changes frequently (DRAFT → SUBMITTED → IN_REVIEW → APPROVED/DECLINED). A 5-minute cache would show stale status to the loan officer. Household 360 uses 300s cache because balance data is less volatile.",
+    "creditScoreProgressBar": "The progressBar component normalizes the FICO score (300–850) to a 0–100 percentage: (score - 300) / 550 * 100. Five color thresholds map to Poor/Fair/Good/VeryGood/Excellent ranges. This is a single declarative expression — no Apex, no CSS.",
+    "conditionalBadgeVariant": "Both StatusBadge and DecisionBadge use expression-based variant properties. APPROVED/FUNDED → success (green), DECLINED → error (red), IN_REVIEW → warning (orange), other → inverse. This replaces v-if/v-else chains in LWC.",
+    "LTVCalculation": "The mortgage-specific section computes LTV inline: requestedAmount / propertyValue * 100. This formula runs in the FlexCard expression engine — no Apex formula field on the object needed.",
+    "timelineComponent": "The timeline element auto-shows/hides milestones based on whether dates are populated. The date fields (submittedDate, eligibilityEvaluatedAt, creditScoreFetchedAt) are written by the IP pipeline at each stage. Each timeline item has a showWhen expression.",
+    "actionVisibility": "'Submit for Review' only shows when status=DRAFT, 'Request Documents' when status=IN_REVIEW, 'Record Decision' when status=IN_REVIEW. This context-sensitive action bar replaces complex JS show/hide logic in LWC.",
+    "moreActionsMenu": "The overflow menu pattern (More Actions) keeps the action bar clean. 'Generate Adverse Action Notice' only appears when status=DECLINED — this is a regulatory document required within 30 days of denial under ECOA.",
+    "submitFromFlexCard": "The 'Submit for Review' button invokes LoanEligibilityIP directly from the FlexCard (action.type:invoke). This demonstrates that FlexCards can trigger IP orchestration without navigating to an OmniScript — useful for single-click advisor workflows."
+  }
+}

@@ -1,0 +1,437 @@
+{
+  "warning": "OmniStudio FlexCard Data Pack format. Import via OmniStudio Designer > FlexCards > Import.",
+  "DataPacks": [
+    {
+      "VlocityDataPackType": "FlexCard",
+      "VlocityDataPackName": "Household360",
+      "VlocityDataPackKey": "FlexCard/Household360",
+      "VlocityDataPackStatus": "Success",
+      "VlocityDataPackData": {
+        "Name": "Household360",
+        "Author": "Wealth Management Team",
+        "Description": "Household 360-degree view FlexCard. Placed on the Account record page (Household layout). Displays net worth, portfolio health, all active financial accounts with their balance bands, holdings summary, assets and liabilities, and quick action buttons. Data sourced from DR-Extract-HouseholdExtract via Integration Procedure.",
+        "Version": 1,
+        "Active": true,
+
+        "DataSource": {
+          "type": "IntegrationProcedure",
+          "name": "ClientOnboardingIP",
+          "comment": "Uses a lightweight variant of ClientOnboardingIP that only runs the DR-Extract-HouseholdExtract step. In production, create a dedicated IP (Household360IP) that wraps only the extract. Alternatively, configure the FlexCard DataSource to call DR-Extract-HouseholdExtract directly.",
+          "inputMap": {
+            "householdId": "{recordId}"
+          },
+          "outputNode": "HouseholdData",
+          "refreshOnAction": true,
+          "cacheEnabled": true,
+          "cacheTTLSeconds": 300,
+          "comment2": "5-minute cache — balance data does not need real-time refresh on every page load"
+        },
+
+        "Theme": {
+          "layout": "card",
+          "cardBorder": true,
+          "cardShadow": true,
+          "padding": "medium",
+          "headerBackground": "#032D60",
+          "headerTextColor": "#FFFFFF"
+        },
+
+        "States": [
+          {
+            "name": "default",
+            "label": "Default",
+            "isDefault": true,
+            "components": [
+
+              {
+                "type": "header",
+                "name": "HouseholdHeader",
+                "order": 1,
+                "properties": {
+                  "title": "{HouseholdData.householdName}",
+                  "subtitle": "Advisor: {HouseholdData.advisorName}",
+                  "icon": {
+                    "type": "salesforce",
+                    "name": "household",
+                    "size": "medium"
+                  }
+                }
+              },
+
+              {
+                "type": "fieldset",
+                "name": "NetWorthSummary",
+                "order": 2,
+                "properties": {
+                  "label": "Household Summary",
+                  "layout": "horizontal",
+                  "columns": 3
+                },
+                "children": [
+                  {
+                    "type": "field",
+                    "name": "NetWorthField",
+                    "properties": {
+                      "label": "Total Net Worth",
+                      "value": "{HouseholdData.netWorth}",
+                      "format": "currency",
+                      "currencyCode": "USD",
+                      "fontSize": "large",
+                      "fontWeight": "bold",
+                      "textColor": "#032D60"
+                    }
+                  },
+                  {
+                    "type": "field",
+                    "name": "AccountCountField",
+                    "properties": {
+                      "label": "Active Accounts",
+                      "value": "{HouseholdData.financialAccounts.length}",
+                      "format": "number"
+                    }
+                  },
+                  {
+                    "type": "field",
+                    "name": "MemberSinceField",
+                    "properties": {
+                      "label": "Member Since",
+                      "value": "{HouseholdData.memberSince}",
+                      "format": "date",
+                      "dateFormat": "MMM YYYY"
+                    }
+                  }
+                ]
+              },
+
+              {
+                "type": "divider",
+                "name": "Divider1",
+                "order": 3
+              },
+
+              {
+                "type": "text",
+                "name": "AccountsHeader",
+                "order": 4,
+                "properties": {
+                  "value": "Financial Accounts",
+                  "fontSize": "medium",
+                  "fontWeight": "bold",
+                  "marginBottom": "small"
+                }
+              },
+
+              {
+                "type": "list",
+                "name": "FinancialAccountsList",
+                "order": 5,
+                "properties": {
+                  "dataNode": "HouseholdData.financialAccounts",
+                  "emptyMessage": "No active financial accounts found.",
+                  "layout": "tile",
+                  "columns": 2,
+                  "maxItems": 10
+                },
+                "itemTemplate": {
+                  "type": "card",
+                  "name": "AccountTile",
+                  "properties": {
+                    "border": true,
+                    "padding": "small",
+                    "backgroundColor": {
+                      "expression": "{item.balance} >= 10000 ? '#EAF5EA' : ({item.balance} >= 1000 ? '#FEF9E7' : '#FDEDEC')",
+                      "comment": "GREEN band: light green bg; YELLOW: light yellow; RED: light red"
+                    }
+                  },
+                  "children": [
+                    {
+                      "type": "badge",
+                      "name": "AccountTypeBadge",
+                      "properties": {
+                        "value": "{item.accountType}",
+                        "variant": "inverse",
+                        "size": "small"
+                      }
+                    },
+                    {
+                      "type": "field",
+                      "name": "AccountBalance",
+                      "properties": {
+                        "label": "Balance",
+                        "value": "{item.balance}",
+                        "format": "currency",
+                        "currencyCode": "USD",
+                        "fontWeight": "bold"
+                      }
+                    },
+                    {
+                      "type": "badge",
+                      "name": "HealthBadge",
+                      "properties": {
+                        "value": {
+                          "expression": "{item.balance} >= 10000 ? 'GREEN' : ({item.balance} >= 1000 ? 'YELLOW' : 'RED')"
+                        },
+                        "variant": {
+                          "expression": "{item.balance} >= 10000 ? 'success' : ({item.balance} >= 1000 ? 'warning' : 'error')"
+                        },
+                        "size": "small",
+                        "label": "Health"
+                      }
+                    },
+                    {
+                      "type": "field",
+                      "name": "LastSynced",
+                      "properties": {
+                        "label": "Last Synced",
+                        "value": "{item.lastSynced}",
+                        "format": "datetime",
+                        "dateFormat": "MM/DD HH:mm",
+                        "textColor": "#706E6B",
+                        "fontSize": "small"
+                      }
+                    },
+                    {
+                      "type": "button",
+                      "name": "SyncBalanceBtn",
+                      "properties": {
+                        "label": "Sync",
+                        "variant": "base",
+                        "size": "x-small",
+                        "iconName": "utility:refresh",
+                        "action": {
+                          "type": "invoke",
+                          "ipName": "SyncBalanceIP",
+                          "inputMap": {
+                            "faId": "{item.faId}",
+                            "namedCredential": "CoreBankingNC"
+                          },
+                          "refreshCard": true,
+                          "confirmationRequired": false
+                        }
+                      }
+                    }
+                  ]
+                }
+              },
+
+              {
+                "type": "divider",
+                "name": "Divider2",
+                "order": 6
+              },
+
+              {
+                "type": "text",
+                "name": "HoldingsHeader",
+                "order": 7,
+                "properties": {
+                  "value": "Top Holdings",
+                  "fontSize": "medium",
+                  "fontWeight": "bold",
+                  "marginBottom": "small"
+                }
+              },
+
+              {
+                "type": "list",
+                "name": "HoldingsList",
+                "order": 8,
+                "properties": {
+                  "dataNode": "HouseholdData.financialAccounts[*].holdings",
+                  "comment": "Flattens holdings across all financial accounts into a single list",
+                  "emptyMessage": "No holdings on record.",
+                  "layout": "table",
+                  "maxItems": 10,
+                  "columns": [
+                    { "label": "Symbol",     "fieldPath": "symbol",      "sortable": true },
+                    { "label": "Asset Class","fieldPath": "assetClass",  "sortable": true },
+                    { "label": "Quantity",   "fieldPath": "quantity",    "format": "number", "align": "right" },
+                    { "label": "Market Value","fieldPath": "marketValue","format": "currency", "align": "right", "sortable": true },
+                    {
+                      "label": "Gain/Loss",
+                      "fieldPath": "unrealizedGainLoss",
+                      "format": "currency",
+                      "align": "right",
+                      "conditionalStyle": {
+                        "expression": "{item.unrealizedGainLoss} >= 0 ? 'color:#2E7D32' : 'color:#C62828'",
+                        "comment": "Green for gains, red for losses"
+                      }
+                    }
+                  ]
+                }
+              },
+
+              {
+                "type": "divider",
+                "name": "Divider3",
+                "order": 9
+              },
+
+              {
+                "type": "text",
+                "name": "AalHeader",
+                "order": 10,
+                "properties": {
+                  "value": "Assets & Liabilities",
+                  "fontSize": "medium",
+                  "fontWeight": "bold"
+                }
+              },
+
+              {
+                "type": "list",
+                "name": "AalList",
+                "order": 11,
+                "properties": {
+                  "dataNode": "HouseholdData.assetsAndLiabilities",
+                  "emptyMessage": "No assets or liabilities on record.",
+                  "layout": "table",
+                  "maxItems": 20,
+                  "columns": [
+                    { "label": "Name",      "fieldPath": "aalName" },
+                    { "label": "Category",  "fieldPath": "category" },
+                    {
+                      "label": "Type",
+                      "fieldPath": "isAsset",
+                      "format": "custom",
+                      "expression": "{item.isAsset} ? 'Asset' : 'Liability'",
+                      "conditionalStyle": {
+                        "expression": "{item.isAsset} ? 'color:#2E7D32;font-weight:bold' : 'color:#C62828;font-weight:bold'"
+                      }
+                    },
+                    { "label": "Amount", "fieldPath": "amount", "format": "currency", "align": "right", "sortable": true }
+                  ]
+                }
+              },
+
+              {
+                "type": "divider",
+                "name": "Divider4",
+                "order": 12
+              },
+
+              {
+                "type": "actionbar",
+                "name": "HouseholdActions",
+                "order": 13,
+                "properties": {
+                  "alignment": "right"
+                },
+                "children": [
+                  {
+                    "type": "button",
+                    "name": "StartOnboardingBtn",
+                    "properties": {
+                      "label": "Open New Account",
+                      "variant": "brand",
+                      "iconName": "utility:add",
+                      "action": {
+                        "type": "navigate",
+                        "target": "omniScript",
+                        "scriptType": "ClientOnboarding",
+                        "subType": "WealthManagement",
+                        "language": "English",
+                        "inputMap": {
+                          "householdId": "{recordId}",
+                          "applicantSalesforceId": "{recordId}"
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "type": "button",
+                    "name": "StartLoanBtn",
+                    "properties": {
+                      "label": "Apply for Loan",
+                      "variant": "neutral",
+                      "iconName": "utility:money",
+                      "action": {
+                        "type": "navigate",
+                        "target": "omniScript",
+                        "scriptType": "LoanApplication",
+                        "subType": "WealthManagement",
+                        "language": "English",
+                        "inputMap": {
+                          "applicantId": "{recordId}"
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "type": "button",
+                    "name": "RefreshAllBtn",
+                    "properties": {
+                      "label": "Refresh All Balances",
+                      "variant": "neutral",
+                      "iconName": "utility:refresh",
+                      "action": {
+                        "type": "invoke",
+                        "ipName": "SyncAllBalancesIP",
+                        "inputMap": {
+                          "householdId": "{recordId}"
+                        },
+                        "refreshCard": true,
+                        "loadingMessage": "Syncing balances from core banking..."
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+
+          {
+            "name": "loading",
+            "label": "Loading",
+            "isDefault": false,
+            "components": [
+              {
+                "type": "spinner",
+                "name": "LoadingSpinner",
+                "properties": {
+                  "size": "medium",
+                  "assistiveText": "Loading household data..."
+                }
+              }
+            ]
+          },
+
+          {
+            "name": "error",
+            "label": "Error",
+            "isDefault": false,
+            "components": [
+              {
+                "type": "text",
+                "name": "ErrorMessage",
+                "properties": {
+                  "value": "Unable to load household data. Please refresh the page or contact your system administrator.",
+                  "textColor": "#C62828",
+                  "icon": "utility:error"
+                }
+              }
+            ]
+          }
+        ],
+
+        "RecordPageSettings": {
+          "placementHint": "right",
+          "targetObjects": ["Account"],
+          "targetRecordTypes": ["HouseholdAccount"],
+          "tabLabel": "Household 360"
+        }
+      }
+    }
+  ],
+
+  "interviewNotes": {
+    "whyFlexCardOverLWC": "FlexCard is purpose-built for FSC record page summaries. It provides: (1) declarative data binding to IP/DR output — no @wire or imperative calls needed, (2) built-in list/tile/table layouts that replace custom LWC HTML templates, (3) admin-configurable without deployment, (4) native cache TTL support (300s here) — an LWC equivalent needs custom caching logic.",
+    "dataSourceCaching": "cacheTTLSeconds:300 means the FlexCard caches the DR Extract result for 5 minutes per record. The advisor does not trigger a new SOQL+callout on every page load. Cache is invalidated when refreshCard:true action completes (e.g., after Sync Balance button).",
+    "healthBandInFlexCard": "Portfolio health band (GREEN/YELLOW/RED) is computed inline via expression syntax on the balance field — no separate Apex call. The badge variant (success/warning/error) and backgroundColor are also expression-driven, making the card visually responsive to account balances.",
+    "holdingsFlattening": "The dataNode path 'HouseholdData.financialAccounts[*].holdings' uses JSONPath wildcard [*] to flatten holdings across all financial accounts into a single list for the table. This is declarative — the equivalent in LWC requires flatMap() in JavaScript.",
+    "gainLossConditionalStyle": "The unrealizedGainLoss column uses a conditionalStyle expression to render positive values in green (#2E7D32) and negative in red (#C62828). This is a FlexCard-native feature — no CSS class toggling needed.",
+    "actionButtonNavigation": "'Open New Account' and 'Apply for Loan' buttons use action.type:'navigate' to launch the respective OmniScripts. The FlexCard passes the current record Id as input to the OmniScript, pre-populating the applicantId field.",
+    "states": "FlexCard supports named states: 'default' (normal render), 'loading' (spinner while IP data loads), 'error' (shown when IP returns an error). The card automatically transitions between states based on data source status — no JS needed.",
+    "recordPagePlacement": "RecordPageSettings.targetObjects:Account with targetRecordTypes:HouseholdAccount ensures this FlexCard only appears on Household Account record pages, not on all Account types. Targeted via Lightning App Builder without code."
+  }
+}
