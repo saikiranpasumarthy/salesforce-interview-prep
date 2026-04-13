@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>NetWorth__c</fullName>
+    <label>Net Worth</label>
+    <type>Currency</type>
+    <precision>18</precision>
+    <scale>2</scale>
+    <required>false</required>
+    <description>Calculated by FinancialAccountService — sum of all active FinancialAccount__c balances for this household.</description>
+</CustomField>
