@@ -1,0 +1,359 @@
+{
+  "warning": "OmniStudio DataRaptor Data Pack format. Import via OmniStudio Designer > DataRaptor > Import.",
+  "DataPacks": [
+    {
+      "VlocityDataPackType": "DataRaptor",
+      "VlocityDataPackName": "DR-Transform-KycTransform",
+      "VlocityDataPackKey": "DataRaptor/DR-Transform-KycTransform",
+      "VlocityDataPackStatus": "Success",
+      "VlocityDataPackData": {
+        "Name": "DR-Transform-KycTransform",
+        "InterfaceType": "Transform",
+        "Description": "Transforms raw data from two sources into the normalized KYC request payload: (1) OmniScript form data (personal info, SSN), (2) Credit Bureau API response (score, band, factors). Output feeds into DR-Load-ClientProfileLoad and the OmniScript review step.",
+        "InterfaceSourceType": "JSON",
+
+        "Transformations": [
+
+          {
+            "name": "NormalizePersonalInfo",
+            "description": "Normalizes OmniScript personal info fields into a canonical PersonalInfo block for downstream DR Load and IP steps.",
+            "inputPath": "OmniScriptData",
+            "outputPath": "NormalizedPersonalInfo",
+            "fieldTransforms": [
+              {
+                "inputField": "FirstName",
+                "outputField": "firstName",
+                "transform": "Trim",
+                "comment": "Remove accidental leading/trailing whitespace"
+              },
+              {
+                "inputField": "LastName",
+                "outputField": "lastName",
+                "transform": "Trim"
+              },
+              {
+                "inputField": "FirstName",
+                "outputField": "fullName",
+                "transform": "Concatenate",
+                "concatenateWith": "LastName",
+                "separator": " ",
+                "comment": "Used in OFAC check payload and display labels"
+              },
+              {
+                "inputField": "DateOfBirth",
+                "outputField": "dateOfBirthIso",
+                "transform": "DateFormat",
+                "inputFormat": "MM/DD/YYYY",
+                "outputFormat": "YYYY-MM-DD",
+                "comment": "OmniScript DatePicker outputs MM/DD/YYYY; KYC API expects ISO 8601"
+              },
+              {
+                "inputField": "DateOfBirth",
+                "outputField": "age",
+                "transform": "DateDiff",
+                "diffUnit": "years",
+                "compareDate": "TODAY",
+                "comment": "Calculated age for under-18 validation in IP"
+              },
+              {
+                "inputField": "SSN",
+                "outputField": "ssnNormalized",
+                "transform": "Replace",
+                "find": "-",
+                "replace": "",
+                "comment": "Strip hyphens: 123-45-6789 → 123456789. Stored as 9-digit string for KYC API."
+              },
+              {
+                "inputField": "SSN",
+                "outputField": "ssnMasked",
+                "transform": "Mask",
+                "maskFrom": 0,
+                "maskTo": 5,
+                "maskChar": "*",
+                "comment": "Display-safe SSN: ***-**-6789 for review step and advisor view"
+              },
+              {
+                "inputField": "Email",
+                "outputField": "emailLower",
+                "transform": "LowerCase",
+                "comment": "Normalize email to lowercase before upsert to avoid case-mismatch duplicates"
+              },
+              {
+                "inputField": "Phone",
+                "outputField": "phoneDigitsOnly",
+                "transform": "RegexReplace",
+                "pattern": "[^0-9]",
+                "replacement": "",
+                "comment": "Strip non-numeric: (555) 555-5555 → 5555555555 for integration"
+              },
+              {
+                "inputField": "State",
+                "outputField": "stateCode",
+                "transform": "UpperCase",
+                "comment": "Ensure state abbreviation is uppercase (CA not ca)"
+              },
+              {
+                "inputField": "ZipCode",
+                "outputField": "zipFiveDigit",
+                "transform": "Substring",
+                "start": 0,
+                "end": 5,
+                "comment": "Trim ZIP+4 (10001-1234) to 5-digit form for address validation API"
+              }
+            ]
+          },
+
+          {
+            "name": "NormalizeCreditBureauResponse",
+            "description": "Maps the raw Credit Bureau API JSON response to the internal CreditProfile structure used by OmniScript display, DataRaptor Load, and Integration Procedure context.",
+            "inputPath": "CreditBureauApiResponse",
+            "outputPath": "CreditProfile",
+            "fieldTransforms": [
+              {
+                "inputField": "score",
+                "outputField": "creditScore",
+                "transform": "ToInteger",
+                "comment": "API returns numeric score; ensure integer type for Salesforce Number field"
+              },
+              {
+                "inputField": "band",
+                "outputField": "creditBand",
+                "transform": "UpperCase",
+                "comment": "Normalize band to uppercase (EXCELLENT, VERY_GOOD, GOOD, FAIR, POOR)"
+              },
+              {
+                "inputField": "band",
+                "outputField": "creditBandLabel",
+                "transform": "Lookup",
+                "lookupMap": {
+                  "EXCELLENT": "Excellent (800–850)",
+                  "VERY_GOOD": "Very Good (740–799)",
+                  "GOOD":      "Good (670–739)",
+                  "FAIR":      "Fair (580–669)",
+                  "POOR":      "Poor (300–579)",
+                  "UNKNOWN":   "Score Unavailable"
+                },
+                "defaultValue": "Score Unavailable",
+                "comment": "Human-readable label for OmniScript display and advisor FlexCard"
+              },
+              {
+                "inputField": "score",
+                "outputField": "eligibleForAutoApproval",
+                "transform": "Condition",
+                "condition": {
+                  "operator": ">=",
+                  "value": 720
+                },
+                "trueValue": true,
+                "falseValue": false,
+                "comment": "Pre-computed boolean flag consumed by IP conditional logic"
+              },
+              {
+                "inputField": "score",
+                "outputField": "eligibleForManualReview",
+                "transform": "Condition",
+                "condition": {
+                  "operator": ">=",
+                  "value": 620
+                },
+                "trueValue": true,
+                "falseValue": false
+              },
+              {
+                "inputField": "factors",
+                "outputField": "topFactors",
+                "transform": "ArraySlice",
+                "start": 0,
+                "end": 3,
+                "comment": "Take only the top 3 factors for display — API may return up to 10"
+              },
+              {
+                "inputField": "factors",
+                "outputField": "factorsDisplay",
+                "transform": "ArrayJoin",
+                "separator": ", ",
+                "comment": "Joined string for OmniScript text display: 'PAYMENT_HISTORY, UTILIZATION, ACCOUNT_AGE'"
+              }
+            ]
+          },
+
+          {
+            "name": "BuildKycApiRequest",
+            "description": "Assembles the outbound KYC / OFAC API request payload from normalized personal info. Used by the ClientOnboardingIP HTTP callout step.",
+            "inputPath": "NormalizedPersonalInfo",
+            "outputPath": "KycApiRequest",
+            "fieldTransforms": [
+              {
+                "inputField": "firstName",
+                "outputField": "firstName",
+                "transform": "PassThrough"
+              },
+              {
+                "inputField": "lastName",
+                "outputField": "lastName",
+                "transform": "PassThrough"
+              },
+              {
+                "inputField": "dateOfBirthIso",
+                "outputField": "dateOfBirth",
+                "transform": "PassThrough"
+              },
+              {
+                "inputField": "ssnNormalized",
+                "outputField": "ssn",
+                "transform": "PassThrough",
+                "comment": "9-digit SSN without hyphens per KYC API spec"
+              },
+              {
+                "staticValue": true,
+                "outputField": "consentObtained",
+                "dataType": "Boolean"
+              },
+              {
+                "staticValue": "ONBOARDING",
+                "outputField": "checkType",
+                "dataType": "String"
+              }
+            ]
+          },
+
+          {
+            "name": "BuildCreditApiRequest",
+            "description": "Assembles the outbound Credit Bureau API request payload.",
+            "inputPath": "NormalizedPersonalInfo",
+            "outputPath": "CreditApiRequest",
+            "fieldTransforms": [
+              {
+                "inputField": "applicantSalesforceId",
+                "outputField": "applicantId",
+                "transform": "PassThrough",
+                "comment": "Salesforce Account Id passed in from OmniScript context"
+              },
+              {
+                "staticValue": true,
+                "outputField": "consentObtained",
+                "dataType": "Boolean"
+              },
+              {
+                "staticValue": "SOFT",
+                "outputField": "inquiryType",
+                "dataType": "String",
+                "comment": "SOFT = soft pull (does not affect credit score). HARD = hard pull on loan offer acceptance."
+              }
+            ]
+          },
+
+          {
+            "name": "BuildOnboardingContextSummary",
+            "description": "Assembles the final onboarding context summary node for OmniScript review step and advisor notification email.",
+            "inputPaths": ["NormalizedPersonalInfo", "CreditProfile"],
+            "outputPath": "OnboardingSummary",
+            "fieldTransforms": [
+              {
+                "inputField": "NormalizedPersonalInfo:fullName",
+                "outputField": "applicantName",
+                "transform": "PassThrough"
+              },
+              {
+                "inputField": "NormalizedPersonalInfo:emailLower",
+                "outputField": "applicantEmail",
+                "transform": "PassThrough"
+              },
+              {
+                "inputField": "NormalizedPersonalInfo:ssnMasked",
+                "outputField": "ssnDisplay",
+                "transform": "PassThrough"
+              },
+              {
+                "inputField": "CreditProfile:creditScore",
+                "outputField": "creditScore",
+                "transform": "PassThrough"
+              },
+              {
+                "inputField": "CreditProfile:creditBandLabel",
+                "outputField": "creditBandLabel",
+                "transform": "PassThrough"
+              },
+              {
+                "inputField": "CreditProfile:eligibleForAutoApproval",
+                "outputField": "autoApprovalEligible",
+                "transform": "PassThrough"
+              },
+              {
+                "inputField": "CreditProfile:factorsDisplay",
+                "outputField": "creditFactors",
+                "transform": "PassThrough"
+              },
+              {
+                "staticValue": "SUBMITTED",
+                "outputField": "onboardingStatus"
+              },
+              {
+                "inputField": "submittedAt",
+                "outputField": "submittedAt",
+                "transform": "DateFormat",
+                "inputFormat": "EPOCH",
+                "outputFormat": "MM/DD/YYYY HH:mm:ss",
+                "defaultValue": "NOW"
+              }
+            ]
+          }
+        ],
+
+        "InputParameters": [
+          {
+            "name": "OmniScriptData",
+            "dataType": "Map",
+            "required": true,
+            "description": "Raw OmniScript form data: FirstName, LastName, SSN, DateOfBirth, Email, Phone, State, ZipCode"
+          },
+          {
+            "name": "CreditBureauApiResponse",
+            "dataType": "Map",
+            "required": false,
+            "description": "Raw Credit Bureau API response: score, band, factors[]. May be null if credit check is skipped."
+          },
+          {
+            "name": "applicantSalesforceId",
+            "dataType": "String",
+            "required": false,
+            "description": "Salesforce Account Id — available after Account upsert in IP, passed back for credit API request"
+          }
+        ],
+
+        "OutputParameters": [
+          {
+            "name": "NormalizedPersonalInfo",
+            "description": "Normalized personal info: trimmed names, ISO date, masked SSN, lowercase email, digits-only phone"
+          },
+          {
+            "name": "CreditProfile",
+            "description": "Normalized credit data: creditScore (Integer), creditBand, creditBandLabel, eligibilityFlags, topFactors"
+          },
+          {
+            "name": "KycApiRequest",
+            "description": "Outbound KYC/OFAC API payload"
+          },
+          {
+            "name": "CreditApiRequest",
+            "description": "Outbound Credit Bureau API payload"
+          },
+          {
+            "name": "OnboardingSummary",
+            "description": "Composite summary for OmniScript review display and advisor notification"
+          }
+        ]
+      }
+    }
+  ],
+
+  "interviewNotes": {
+    "whyTransformDR": "DataRaptor Transform performs field mapping, type coercion, string manipulation, and conditional logic without Apex code. This one DR replaces ~80 lines of Apex transformation methods. Admin-modifiable without deployment.",
+    "ssnHandling": "SSN is normalized (hyphens stripped) for the KYC API, masked (first 5 chars replaced with *) for display, but never stored in plaintext in Salesforce. The actual SSN from the OmniScript is only ever in memory during the Integration Procedure execution.",
+    "dateFormatTransform": "OmniScript DatePicker outputs MM/DD/YYYY; KYC and Credit APIs expect ISO 8601 (YYYY-MM-DD). The DateFormat transform handles this conversion declaratively. Without this DR, you'd need Apex date parsing code.",
+    "lookupTransform": "The creditBandLabel Lookup transform converts 'GOOD' → 'Good (670–739)' inline. This is a declarative value map — equivalent to an Apex Map<String,String> but admin-configurable.",
+    "conditionTransform": "eligibleForAutoApproval and eligibleForManualReview use Condition transforms (score >= 720, score >= 620) to produce Boolean flags. IP can then use these in Conditional steps instead of numeric comparisons.",
+    "multiInputTransform": "BuildOnboardingContextSummary takes two input paths (NormalizedPersonalInfo and CreditProfile). DataRaptor Transform supports merging multiple input nodes into a single output — equivalent to Apex object composition.",
+    "executionOrder": "In the ClientOnboardingIP: (1) NormalizePersonalInfo + BuildKycApiRequest → (2) KYC HTTP callout → (3) NormalizeCreditBureauResponse → (4) BuildCreditApiRequest → (5) Credit HTTP callout → (6) BuildOnboardingContextSummary → (7) DR-Load-ClientProfileLoad."
+  }
+}

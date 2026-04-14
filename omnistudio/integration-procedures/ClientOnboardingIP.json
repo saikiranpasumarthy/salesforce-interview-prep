@@ -1,0 +1,515 @@
+{
+  "warning": "OmniStudio Integration Procedure Data Pack format. Import via OmniStudio Designer > Integration Procedures > Import.",
+  "DataPacks": [
+    {
+      "VlocityDataPackType": "IntegrationProcedure",
+      "VlocityDataPackName": "ClientOnboarding/WealthManagement",
+      "VlocityDataPackKey": "IntegrationProcedure/ClientOnboarding/WealthManagement",
+      "VlocityDataPackStatus": "Success",
+      "VlocityDataPackData": {
+        "Name": "ClientOnboardingIP",
+        "Type": "ClientOnboarding",
+        "SubType": "WealthManagement",
+        "Description": "Orchestrates the full digital client onboarding flow: duplicate check, KYC/OFAC identity verification, soft credit pull, Account + FinancialAccount__c upsert, and onboarding summary assembly. Called from ClientOnboarding OmniScript Step 3 (FinancialProfile) and Step 4 (ReviewAndSubmit).",
+        "IsActive": true,
+        "StepChartEnabled": true,
+        "IPMergeEnabled": true,
+
+        "Elements": [
+
+          {
+            "index": 1,
+            "type": "SetValues",
+            "name": "InitializeContext",
+            "description": "Validate required inputs and initialize IP-level context variables before processing begins.",
+            "active": true,
+            "properties": {
+              "assignments": [
+                {
+                  "name": "ipCorrelationId",
+                  "value": "%gen_uuid%",
+                  "type": "String",
+                  "comment": "Unique ID for this IP execution — used in error logging and downstream audit"
+                },
+                {
+                  "name": "processingAction",
+                  "value": "%input:action%",
+                  "type": "String",
+                  "defaultValue": "ONBOARD",
+                  "comment": "ONBOARD (Step 3 call) or FINALIZE (Step 4 submission)"
+                },
+                {
+                  "name": "applicantId",
+                  "value": "%input:applicantSalesforceId%",
+                  "type": "String",
+                  "defaultValue": null
+                },
+                {
+                  "name": "kycPassed",
+                  "value": false,
+                  "type": "Boolean"
+                },
+                {
+                  "name": "creditScore",
+                  "value": null,
+                  "type": "Integer"
+                },
+                {
+                  "name": "processingErrors",
+                  "value": [],
+                  "type": "Array"
+                }
+              ]
+            }
+          },
+
+          {
+            "index": 2,
+            "type": "DataRaptorTransformAction",
+            "name": "NormalizeInputData",
+            "description": "Runs DR-Transform-KycTransform NormalizePersonalInfo and BuildKycApiRequest blocks. Produces: NormalizedPersonalInfo (trimmed names, ISO DOB, masked SSN, normalized phone/email), KycApiRequest payload.",
+            "active": true,
+            "properties": {
+              "dataRaptorName": "DR-Transform-KycTransform",
+              "transformationBlock": "NormalizePersonalInfo",
+              "inputMap": {
+                "OmniScriptData:FirstName":    "%input:FirstName%",
+                "OmniScriptData:LastName":     "%input:LastName%",
+                "OmniScriptData:DateOfBirth":  "%input:DateOfBirth%",
+                "OmniScriptData:SSN":          "%input:SSN%",
+                "OmniScriptData:Email":        "%input:Email%",
+                "OmniScriptData:Phone":        "%input:Phone%",
+                "OmniScriptData:State":        "%input:State%",
+                "OmniScriptData:ZipCode":      "%input:ZipCode%"
+              },
+              "outputMap": {
+                "NormalizedPersonalInfo": "NormalizedPersonalInfo"
+              }
+            },
+            "onError": {
+              "action": "SetErrorAndContinue",
+              "errorPath": "processingErrors",
+              "errorMessage": "Input normalization failed: %error:message%"
+            }
+          },
+
+          {
+            "index": 3,
+            "type": "DataRaptorExtractAction",
+            "name": "CheckExistingHousehold",
+            "description": "Looks up existing Account by PersonEmail to detect duplicates before creating a new record. Uses a targeted Extract — not HouseholdExtract (which requires an Id).",
+            "active": true,
+            "properties": {
+              "dataRaptorName": "DR-Extract-HouseholdByEmail",
+              "inputMap": {
+                "emailLower": "%NormalizedPersonalInfo:emailLower%"
+              },
+              "outputMap": {
+                "existingAccountId":   "ExistingHousehold:accountId",
+                "existingAccountName": "ExistingHousehold:accountName",
+                "duplicateFound":      "ExistingHousehold:found"
+              }
+            },
+            "onError": {
+              "action": "SetValueAndContinue",
+              "path": "ExistingHousehold:found",
+              "value": false,
+              "comment": "If extract fails (e.g., no matching record), treat as no duplicate and proceed"
+            }
+          },
+
+          {
+            "index": 4,
+            "type": "Conditional",
+            "name": "DuplicateAccountGuard",
+            "description": "If an existing Account with this email already exists, skip creation and reuse the existing Account Id. This prevents duplicate PersonAccounts for the same email address.",
+            "active": true,
+            "properties": {
+              "condition": "%ExistingHousehold:found% === true",
+              "trueElements": [
+                {
+                  "index": "4a",
+                  "type": "SetValues",
+                  "name": "UseExistingAccount",
+                  "properties": {
+                    "assignments": [
+                      {
+                        "name": "applicantId",
+                        "value": "%ExistingHousehold:accountId%"
+                      },
+                      {
+                        "name": "isNewAccount",
+                        "value": false
+                      }
+                    ]
+                  }
+                }
+              ],
+              "falseElements": [
+                {
+                  "index": "4b",
+                  "type": "SetValues",
+                  "name": "FlagNewAccount",
+                  "properties": {
+                    "assignments": [
+                      {
+                        "name": "isNewAccount",
+                        "value": true
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          },
+
+          {
+            "index": 5,
+            "type": "Conditional",
+            "name": "KycConsentCheck",
+            "description": "Only run KYC verification if the applicant provided consent. If consent is false, set kycPassed = false and surface an error — onboarding cannot proceed without KYC consent.",
+            "active": true,
+            "properties": {
+              "condition": "%input:ConsentKyc% === true",
+              "falseElements": [
+                {
+                  "index": "5a",
+                  "type": "SetValues",
+                  "name": "MissingKycConsent",
+                  "properties": {
+                    "assignments": [
+                      {
+                        "name": "kycPassed",
+                        "value": false
+                      },
+                      {
+                        "name": "kycError",
+                        "value": "KYC consent is required to proceed with account opening."
+                      }
+                    ]
+                  }
+                },
+                {
+                  "index": "5b",
+                  "type": "Response",
+                  "name": "EarlyExitNoConsent",
+                  "properties": {
+                    "output": {
+                      "kycPassed":    false,
+                      "errorMessage": "%kycError%",
+                      "ipStatus":     "CONSENT_REQUIRED"
+                    }
+                  }
+                }
+              ]
+            }
+          },
+
+          {
+            "index": 6,
+            "type": "DataRaptorTransformAction",
+            "name": "BuildKycRequestPayload",
+            "description": "Runs BuildKycApiRequest transform block to assemble the outbound KYC/OFAC API payload from normalized personal info.",
+            "active": true,
+            "properties": {
+              "dataRaptorName": "DR-Transform-KycTransform",
+              "transformationBlock": "BuildKycApiRequest",
+              "inputMap": {
+                "NormalizedPersonalInfo": "%NormalizedPersonalInfo%"
+              },
+              "outputMap": {
+                "KycApiRequest": "KycApiRequest"
+              }
+            }
+          },
+
+          {
+            "index": 7,
+            "type": "HTTPAction",
+            "name": "CallKycOfacApi",
+            "description": "Calls the KYC provider's OFAC sanctions check endpoint. Uses Named Credential KycProviderNC — no credentials in config.",
+            "active": true,
+            "properties": {
+              "namedCredential": "KycProviderNC",
+              "endpoint": "/v1/ofac",
+              "method": "POST",
+              "headers": {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+              },
+              "body": "%KycApiRequest%",
+              "timeout": 10000,
+              "outputMap": {
+                "matched":    "KycApiResponse:matched",
+                "matchScore": "KycApiResponse:matchScore",
+                "listName":   "KycApiResponse:listName",
+                "checkId":    "KycApiResponse:checkId"
+              }
+            },
+            "onError": {
+              "action": "SetValueAndContinue",
+              "assignments": [
+                { "name": "KycApiResponse:matched",    "value": false },
+                { "name": "KycApiResponse:matchScore", "value": 0 },
+                { "name": "kycApiError",               "value": "%error:message%" }
+              ],
+              "comment": "On KYC API timeout/error, default to not-matched and flag for manual review rather than blocking onboarding"
+            }
+          },
+
+          {
+            "index": 8,
+            "type": "SetValues",
+            "name": "EvaluateKycResult",
+            "description": "Evaluates the OFAC result and sets kycPassed flag. A match score > 85 is treated as a confirmed match and blocks onboarding.",
+            "active": true,
+            "properties": {
+              "assignments": [
+                {
+                  "name": "kycPassed",
+                  "value": "%KycApiResponse:matched% === false || %KycApiResponse:matchScore% < 85",
+                  "type": "Boolean",
+                  "evaluateAsExpression": true
+                },
+                {
+                  "name": "ofacMatched",
+                  "value": "%KycApiResponse:matched%"
+                },
+                {
+                  "name": "ofacMatchScore",
+                  "value": "%KycApiResponse:matchScore%"
+                }
+              ]
+            }
+          },
+
+          {
+            "index": 9,
+            "type": "Conditional",
+            "name": "CreditConsentAndKycGate",
+            "description": "Only proceed to credit check if: (1) KYC passed and (2) user consented to soft credit pull. If either fails, skip credit step and set creditScore = null.",
+            "active": true,
+            "properties": {
+              "condition": "%kycPassed% === true && %input:ConsentCreditCheck% === true",
+              "trueElements": [
+
+                {
+                  "index": "9a",
+                  "type": "DataRaptorTransformAction",
+                  "name": "BuildCreditRequestPayload",
+                  "properties": {
+                    "dataRaptorName": "DR-Transform-KycTransform",
+                    "transformationBlock": "BuildCreditApiRequest",
+                    "inputMap": {
+                      "NormalizedPersonalInfo":          "%NormalizedPersonalInfo%",
+                      "applicantSalesforceId":           "%applicantId%"
+                    },
+                    "outputMap": {
+                      "CreditApiRequest": "CreditApiRequest"
+                    }
+                  }
+                },
+
+                {
+                  "index": "9b",
+                  "type": "HTTPAction",
+                  "name": "CallCreditBureauApi",
+                  "description": "Soft credit pull from Credit Bureau API. Named Credential: CreditBureauNC.",
+                  "properties": {
+                    "namedCredential": "CreditBureauNC",
+                    "endpoint": "/v1/scores",
+                    "method": "POST",
+                    "headers": {
+                      "Content-Type": "application/json"
+                    },
+                    "body": "%CreditApiRequest%",
+                    "timeout": 15000,
+                    "outputMap": {
+                      "score":   "CreditBureauApiResponse:score",
+                      "band":    "CreditBureauApiResponse:band",
+                      "factors": "CreditBureauApiResponse:factors"
+                    }
+                  },
+                  "onError": {
+                    "action": "SetValueAndContinue",
+                    "assignments": [
+                      { "name": "CreditBureauApiResponse:score", "value": null },
+                      { "name": "CreditBureauApiResponse:band",  "value": "UNKNOWN" },
+                      { "name": "creditApiError",                "value": "%error:message%" }
+                    ]
+                  }
+                },
+
+                {
+                  "index": "9c",
+                  "type": "DataRaptorTransformAction",
+                  "name": "NormalizeCreditResponse",
+                  "properties": {
+                    "dataRaptorName": "DR-Transform-KycTransform",
+                    "transformationBlock": "NormalizeCreditBureauResponse",
+                    "inputMap": {
+                      "CreditBureauApiResponse": "%CreditBureauApiResponse%"
+                    },
+                    "outputMap": {
+                      "CreditProfile": "CreditProfile"
+                    }
+                  }
+                },
+
+                {
+                  "index": "9d",
+                  "type": "SetValues",
+                  "name": "SetCreditScoreInContext",
+                  "properties": {
+                    "assignments": [
+                      { "name": "creditScore",       "value": "%CreditProfile:creditScore%" },
+                      { "name": "creditBand",        "value": "%CreditProfile:creditBand%" },
+                      { "name": "creditBandLabel",   "value": "%CreditProfile:creditBandLabel%" },
+                      { "name": "creditFetchedAt",   "value": "%now%" }
+                    ]
+                  }
+                }
+              ],
+
+              "falseElements": [
+                {
+                  "index": "9e",
+                  "type": "SetValues",
+                  "name": "SkipCreditCheck",
+                  "properties": {
+                    "assignments": [
+                      { "name": "creditScore",     "value": null },
+                      { "name": "creditBand",      "value": "UNKNOWN" },
+                      { "name": "creditSkipReason","value": "%kycPassed% === false ? 'KYC_FAILED' : 'CONSENT_NOT_PROVIDED'" }
+                    ]
+                  }
+                }
+              ]
+            }
+          },
+
+          {
+            "index": 10,
+            "type": "DataRaptorLoadAction",
+            "name": "UpsertClientProfile",
+            "description": "Calls DR-Load-ClientProfileLoad to upsert Account (PersonAccount) and one FinancialAccount__c per requested account type. Only runs if KYC passed OR it's a FINALIZE action (re-upsert on final submit).",
+            "active": true,
+            "properties": {
+              "condition": "%kycPassed% === true || %processingAction% === 'FINALIZE'",
+              "dataRaptorName": "DR-Load-ClientProfileLoad",
+              "inputMap": {
+                "PersonalInfo:FirstName":         "%NormalizedPersonalInfo:firstName%",
+                "PersonalInfo:LastName":          "%NormalizedPersonalInfo:lastName%",
+                "PersonalInfo:DateOfBirth":       "%NormalizedPersonalInfo:dateOfBirthIso%",
+                "PersonalInfo:Email":             "%NormalizedPersonalInfo:emailLower%",
+                "PersonalInfo:Phone":             "%NormalizedPersonalInfo:phoneDigitsOnly%",
+                "PersonalInfo:AddressLine1":      "%input:AddressLine1%",
+                "PersonalInfo:City":              "%input:City%",
+                "PersonalInfo:State":             "%NormalizedPersonalInfo:stateCode%",
+                "PersonalInfo:ZipCode":           "%NormalizedPersonalInfo:zipFiveDigit%",
+                "EmploymentInfo:AnnualIncome":    "%input:AnnualIncome%",
+                "FinancialInfo:AccountTypesRequested": "%input:AccountTypesRequested%",
+                "FinancialInfo:InitialDepositAmount":  "%input:InitialDepositAmount%",
+                "OnboardingResult:kycPassed":     "%kycPassed%",
+                "OnboardingResult:creditScore":   "%creditScore%",
+                "applicantId":                    "%applicantId%"
+              },
+              "outputMap": {
+                "newAccountId": "CreatedAccount:accountId"
+              }
+            },
+            "onError": {
+              "action": "ThrowException",
+              "message": "Account creation failed during onboarding. Correlation: %ipCorrelationId%. Error: %error:message%"
+            }
+          },
+
+          {
+            "index": 11,
+            "type": "SetValues",
+            "name": "UpdateApplicantId",
+            "description": "If a new Account was created, update applicantId from the DR Load output.",
+            "active": true,
+            "properties": {
+              "assignments": [
+                {
+                  "name": "applicantId",
+                  "value": "%CreatedAccount:accountId% || %applicantId%",
+                  "evaluateAsExpression": true
+                }
+              ]
+            }
+          },
+
+          {
+            "index": 12,
+            "type": "DataRaptorTransformAction",
+            "name": "BuildOnboardingSummary",
+            "description": "Runs BuildOnboardingContextSummary transform block. Assembles the final OnboardingSummary for the OmniScript review step display and advisor notification.",
+            "active": true,
+            "properties": {
+              "dataRaptorName": "DR-Transform-KycTransform",
+              "transformationBlock": "BuildOnboardingContextSummary",
+              "inputMap": {
+                "NormalizedPersonalInfo":            "%NormalizedPersonalInfo%",
+                "CreditProfile":                     "%CreditProfile%",
+                "applicantSalesforceId":             "%applicantId%"
+              },
+              "outputMap": {
+                "OnboardingSummary": "OnboardingSummary"
+              }
+            }
+          },
+
+          {
+            "index": 13,
+            "type": "Response",
+            "name": "IPResponse",
+            "description": "Assembles and returns the final IP output to the OmniScript context. All keys map to OmniScript output paths used by Conditional elements and Review step.",
+            "active": true,
+            "properties": {
+              "output": {
+                "kycPassed":        "%kycPassed%",
+                "ofacMatched":      "%ofacMatched%",
+                "ofacMatchScore":   "%ofacMatchScore%",
+                "creditScore":      "%creditScore%",
+                "creditBand":       "%creditBand%",
+                "creditBandLabel":  "%creditBandLabel%",
+                "accountId":        "%applicantId%",
+                "isNewAccount":     "%isNewAccount%",
+                "onboardingSummary":"%OnboardingSummary%",
+                "ipStatus":         "SUCCESS",
+                "correlationId":    "%ipCorrelationId%",
+                "processingErrors": "%processingErrors%"
+              }
+            }
+          }
+        ],
+
+        "ErrorHandling": {
+          "globalOnError": {
+            "action": "ReturnError",
+            "output": {
+              "kycPassed":     false,
+              "ipStatus":      "ERROR",
+              "errorMessage":  "%error:message%",
+              "correlationId": "%ipCorrelationId%"
+            }
+          }
+        }
+      }
+    }
+  ],
+
+  "interviewNotes": {
+    "ipVsApex": "This IP replaces what would otherwise be a 200+ line Apex service class. It orchestrates 4 external callouts, 2 DML operations (via DR Load), and 5 transform operations — all without Apex. Admin-modifiable, no deployment required for business rule changes.",
+    "stepOrdering": "Steps execute sequentially by index. Index 4 (duplicate check) runs before index 7 (KYC callout) so we don't make external API calls for duplicate records. Index 9 (credit) is nested in a Conditional that gates on kycPassed — credit is only pulled if KYC clears.",
+    "conditionalNesting": "Steps 9a–9e are nested inside the Conditional at index 9. OmniStudio IP supports nested element arrays in trueElements/falseElements. This is the IP equivalent of if/else branching.",
+    "namedCredentialPattern": "Both HTTPAction steps (KYC and Credit Bureau) use namedCredential property instead of hardcoded URLs or credentials. This means the IP works across Dev/Sandbox/Prod without modification — only the Named Credential endpoint differs per org.",
+    "onErrorSetAndContinue": "KYC and Credit Bureau API errors use SetValueAndContinue rather than ThrowException. This is a resilience pattern: external API outages don't block account creation. The IP sets default safe values (matched:false, score:null) and flags the issue via processingErrors array.",
+    "correlationId": "ipCorrelationId is generated via %gen_uuid% at step 1 and included in all error messages and the response. This enables end-to-end tracing across IP execution, DR logs, and Apex logs.",
+    "finalizePath": "When called with action:FINALIZE (OmniScript Step 4 Submit), the IP skips the KYC gate at step 10 (kycPassed already set from Step 3 call) and re-upserts the Account with FinalConfirmation flag. The ExternalId ensures no duplicate is created.",
+    "drLoadRollbackNote": "DR-Load-ClientProfileLoad does not support atomic rollback. If FinancialAccount__c creation fails after Account upsert, the IP's onError ThrowException at index 10 surfaces the error to the OmniScript. A compensating cleanup job (batch or queueable) handles orphaned Account records.",
+    "agentforceGrounding": "The OnboardingSummary output (step 12) is structured for Agentforce context injection. A future @InvocableMethod can call this IP and pass OnboardingSummary:applicantName, creditBandLabel, etc. directly to the agent's context window."
+  }
+}

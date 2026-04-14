@@ -1,0 +1,16 @@
+{
+  "orgName": "Wealth Management Dev",
+  "edition": "Developer",
+  "features": [
+    "PersonAccounts",
+    "API"
+  ],
+  "settings": {
+    "accountSettings": {
+      "enablePersonAccount": true
+    },
+    "financialServicesSettings": {
+      "enableFinancialServicesCloud": true
+    }
+  }
+}

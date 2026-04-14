@@ -1,0 +1,213 @@
+{
+  "warning": "OmniStudio DataRaptor Data Pack format. Import via OmniStudio Designer > DataRaptor > Import.",
+  "DataPacks": [
+    {
+      "VlocityDataPackType": "DataRaptor",
+      "VlocityDataPackName": "DR-Load-ClientProfileLoad",
+      "VlocityDataPackKey": "DataRaptor/DR-Load-ClientProfileLoad",
+      "VlocityDataPackStatus": "Success",
+      "VlocityDataPackData": {
+        "Name": "DR-Load-ClientProfileLoad",
+        "InterfaceType": "Load",
+        "Description": "Upserts Account (PersonAccount/Household) and one or more FinancialAccount__c records from the ClientOnboarding OmniScript. Uses External IDs for idempotent upsert — safe to retry on failure without creating duplicates.",
+        "InterfaceSourceType": "JSON",
+
+        "Objects": [
+          {
+            "objectName": "Account",
+            "alias": "HouseholdAccount",
+            "operation": "Upsert",
+            "externalIdField": null,
+            "upsertKey": "Id",
+            "allowCreate": true,
+            "allowUpdate": true,
+            "level": 0,
+            "fieldMappings": [
+              {
+                "inputPath": "PersonalInfo:FirstName",
+                "outputField": "FirstName",
+                "dataType": "String",
+                "required": true
+              },
+              {
+                "inputPath": "PersonalInfo:LastName",
+                "outputField": "LastName",
+                "dataType": "String",
+                "required": true
+              },
+              {
+                "inputPath": "PersonalInfo:DateOfBirth",
+                "outputField": "PersonBirthdate",
+                "dataType": "Date",
+                "required": false,
+                "transform": "toDate"
+              },
+              {
+                "inputPath": "PersonalInfo:Email",
+                "outputField": "PersonEmail",
+                "dataType": "String",
+                "required": true
+              },
+              {
+                "inputPath": "PersonalInfo:Phone",
+                "outputField": "Phone",
+                "dataType": "String",
+                "required": false
+              },
+              {
+                "inputPath": "PersonalInfo:AddressLine1",
+                "outputField": "BillingStreet",
+                "dataType": "String",
+                "required": false
+              },
+              {
+                "inputPath": "PersonalInfo:City",
+                "outputField": "BillingCity",
+                "dataType": "String",
+                "required": false
+              },
+              {
+                "inputPath": "PersonalInfo:State",
+                "outputField": "BillingState",
+                "dataType": "String",
+                "required": false
+              },
+              {
+                "inputPath": "PersonalInfo:ZipCode",
+                "outputField": "BillingPostalCode",
+                "dataType": "String",
+                "required": false
+              },
+              {
+                "inputPath": "EmploymentInfo:AnnualIncome",
+                "outputField": "AnnualRevenue",
+                "dataType": "Decimal",
+                "required": false,
+                "comment": "AnnualRevenue repurposed as annual income on PersonAccount"
+              },
+              {
+                "inputPath": "OnboardingResult:kycPassed",
+                "outputField": "KycVerified__c",
+                "dataType": "Boolean",
+                "required": false
+              },
+              {
+                "inputPath": "OnboardingResult:creditScore",
+                "outputField": "CreditScore__c",
+                "dataType": "Integer",
+                "required": false
+              },
+              {
+                "inputPath": "RecordTypeId:PersonAccount",
+                "outputField": "RecordTypeId",
+                "dataType": "String",
+                "required": false,
+                "staticValue": "{PersonAccountRecordTypeId}",
+                "comment": "Resolved at IP level via DataRaptor Transform or static CMDT lookup"
+              }
+            ],
+            "outputParameters": [
+              {
+                "name": "newAccountId",
+                "fieldName": "Id",
+                "description": "Salesforce Id of the upserted Account — passed to child FinancialAccount__c records"
+              }
+            ]
+          },
+
+          {
+            "objectName": "FinancialAccount__c",
+            "alias": "PrimaryFinancialAccount",
+            "operation": "Upsert",
+            "externalIdField": "ExternalAccountId__c",
+            "allowCreate": true,
+            "allowUpdate": true,
+            "level": 1,
+            "parentObject": "Account",
+            "parentIdSource": "outputParameter:newAccountId",
+            "parentField": "Account__c",
+            "iterateOver": "FinancialInfo:AccountTypesRequested",
+            "comment": "Creates one FinancialAccount__c per selected account type. iterateOver causes the DR to loop over the multiselect array.",
+            "fieldMappings": [
+              {
+                "inputPath": "iterationItem",
+                "outputField": "AccountType__c",
+                "dataType": "String",
+                "required": true,
+                "comment": "Current value from AccountTypesRequested multiselect (CHECKING, SAVINGS, etc.)"
+              },
+              {
+                "inputPath": "outputParameter:newAccountId",
+                "outputField": "Account__c",
+                "dataType": "String",
+                "required": true
+              },
+              {
+                "inputPath": "FinancialInfo:InitialDepositAmount",
+                "outputField": "Balance__c",
+                "dataType": "Decimal",
+                "required": false,
+                "defaultValue": 0
+              },
+              {
+                "staticValue": true,
+                "outputField": "IsActive__c",
+                "dataType": "Boolean"
+              },
+              {
+                "inputPath": "generatedExternalId",
+                "outputField": "ExternalAccountId__c",
+                "dataType": "String",
+                "required": false,
+                "comment": "Generated upstream in IP as {accountId}-{accountType} to ensure uniqueness per type"
+              }
+            ]
+          }
+        ],
+
+        "InputParameters": [
+          {
+            "name": "PersonalInfo",
+            "dataType": "Map",
+            "required": true,
+            "description": "Flattened personal info from OmniScript Step 1 (FirstName, LastName, Email, etc.)"
+          },
+          {
+            "name": "EmploymentInfo",
+            "dataType": "Map",
+            "required": false,
+            "description": "Employment and income data from OmniScript Step 2"
+          },
+          {
+            "name": "FinancialInfo",
+            "dataType": "Map",
+            "required": true,
+            "description": "Financial profile from OmniScript Step 3 (AccountTypesRequested, InitialDepositAmount)"
+          },
+          {
+            "name": "OnboardingResult",
+            "dataType": "Map",
+            "required": false,
+            "description": "Results from ClientOnboardingIP: kycPassed, creditScore, etc."
+          }
+        ],
+
+        "ErrorHandling": {
+          "stopOnError": true,
+          "errorOutputPath": "LoadErrors",
+          "rollbackOnError": false,
+          "comment": "stopOnError:true means if Account upsert fails, FinancialAccount__c records are not attempted. rollbackOnError:false because DataRaptor Load does not support DML rollback — error handling/compensation must be in the IP."
+        }
+      }
+    }
+  ],
+
+  "interviewNotes": {
+    "upsertVsInsert": "Operation is Upsert on Account (using Id if provided, create otherwise) and Upsert on FinancialAccount__c using ExternalAccountId__c. This makes the entire onboarding flow idempotent — if the OmniScript is resubmitted (e.g., user hits browser back), no duplicate records are created.",
+    "iterateOver": "The iterateOver property on FinancialAccount__c causes the DR to loop over the AccountTypesRequested array. If the user selected [CHECKING, SAVINGS, INVESTMENT], the DR creates 3 FinancialAccount__c records in a single load operation — no Apex loop needed.",
+    "parentIdChain": "The Account upsert returns the new Account Id via outputParameter:newAccountId. The FinancialAccount__c mappings reference it as parentIdSource:outputParameter:newAccountId and write it to Account__c. This is the DataRaptor parent-child linking pattern.",
+    "recordTypeId": "PersonAccount RecordTypeId cannot be hardcoded — it differs per org. The IP resolves it via a prior DataRaptor Extract querying RecordType where DeveloperName = 'PersonAccount' and passes it as input. Alternatively, store in Custom Metadata for portability.",
+    "errorHandlingNote": "DataRaptor Load does not support atomic DML rollback across parent-child. If FinancialAccount__c fails after Account succeeds, the Account remains. The IP handles compensation by deleting the orphaned Account if child load fails.",
+    "flsNote": "DataRaptor Load respects FLS by default in OmniStudio runtime — fields the running user cannot write are silently skipped. Add field-level permission validation in IP before calling this DR if strict enforcement is needed."
+  }
+}

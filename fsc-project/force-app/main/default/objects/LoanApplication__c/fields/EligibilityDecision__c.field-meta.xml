@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>EligibilityDecision__c</fullName>
+    <label>Eligibility Decision</label>
+    <type>Picklist</type>
+    <required>false</required>
+    <valueSet>
+        <valueSetDefinition>
+            <sorted>false</sorted>
+            <value><fullName>PENDING</fullName><label>Pending</label><default>true</default></value>
+            <value><fullName>AUTO_APPROVED</fullName><label>Auto Approved</label><default>false</default></value>
+            <value><fullName>MANUAL_REVIEW</fullName><label>Manual Review</label><default>false</default></value>
+            <value><fullName>DECLINED</fullName><label>Declined</label><default>false</default></value>
+        </valueSetDefinition>
+    </valueSet>
+</CustomField>
