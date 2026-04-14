@@ -1,0 +1,143 @@
+<!--
+  storeInventoryTracker
+  ─────────────────────────────────────────────────────────────────────────────
+  Displayed on the Account (Retail Store) record page.
+  Shows live store-level inventory with colour-coded status (In Stock / Low /
+  Out of Stock), a search filter (client-side — no Apex call per keystroke),
+  and a Refresh button that calls refreshApex to reload from the server.
+
+  Wire adapter used here because inventory is read-only for this component —
+  the rep triggers stock updates via visitExecutionWizard, not here.
+  Wire + refreshApex is the correct pattern for read-heavy, periodically
+  refreshed data that doesn't need real-time freshness on every interaction.
+  ─────────────────────────────────────────────────────────────────────────────
+-->
+<template>
+    <lightning-card icon-name="standard:product_item">
+
+        <!-- Card Title with refresh button -->
+        <span slot="title">Store Inventory</span>
+        <div slot="actions" class="card-actions">
+            <lightning-button-icon
+                icon-name="utility:refresh"
+                alternative-text="Refresh inventory"
+                title="Refresh"
+                variant="border-filled"
+                size="small"
+                onclick={handleRefresh}
+                disabled={isLoading}>
+            </lightning-button-icon>
+        </div>
+
+        <!-- ── Spinner ──────────────────────────────────────────────────── -->
+        <template lwc:if={isLoading}>
+            <div class="slds-align_absolute-center slds-p-around_large">
+                <lightning-spinner alternative-text="Loading inventory..." size="small">
+                </lightning-spinner>
+            </div>
+        </template>
+
+        <template lwc:else>
+
+            <!-- ── Error ──────────────────────────────────────────────────── -->
+            <template lwc:if={errorMessage}>
+                <div class="inline-error slds-m-around_small" style="background:#fef1ee;
+                     border-left:4px solid #ba0517;padding:0.6rem 0.75rem;border-radius:0.25rem;
+                     font-size:0.82rem;color:#ba0517;">
+                    {errorMessage}
+                </div>
+            </template>
+
+            <!-- ── Summary Bar ────────────────────────────────────────────── -->
+            <div class="summary-bar">
+                <div class="summary-tile">
+                    <div class="summary-count">{totalProducts}</div>
+                    <div class="summary-label">Total Products</div>
+                </div>
+                <div class="summary-tile">
+                    <div class="summary-count" style="color:#2e844a;">{inStockCount}</div>
+                    <div class="summary-label">In Stock</div>
+                </div>
+                <div class="summary-tile">
+                    <div class="summary-count" style="color:#dd7a01;">{lowStockCount}</div>
+                    <div class="summary-label">Low Stock</div>
+                </div>
+                <div class="summary-tile oos-tile">
+                    <div class="summary-count">{outOfStockCount}</div>
+                    <div class="summary-label">Out of Stock</div>
+                </div>
+            </div>
+
+            <!-- ── Search Filter ──────────────────────────────────────────── -->
+            <div class="search-row">
+                <lightning-input
+                    type="search"
+                    label="Filter products"
+                    variant="label-hidden"
+                    placeholder="Search by product name or category..."
+                    value={searchTerm}
+                    onchange={handleSearch}>
+                </lightning-input>
+            </div>
+
+            <!-- ── Inventory Table ─────────────────────────────────────────── -->
+            <div class="inventory-table-wrap">
+
+                <template lwc:if={hasInventory}>
+                    <!-- Header row -->
+                    <div class="inv-row header-row">
+                        <span>Product</span>
+                        <span class="stock-cell">Current</span>
+                        <span class="stock-cell">Minimum</span>
+                        <span>Status</span>
+                        <span class="last-updated-cell">Last Updated</span>
+                    </div>
+
+                    <!-- Data rows -->
+                    <template for:each={filteredInventory} for:item="item">
+                        <div key={item.id} class={item.rowCssClass}>
+                            <span class="product-cell" title={item.productName}>
+                                {item.productName}
+                            </span>
+                            <span class="stock-cell">{item.currentStock}</span>
+                            <span class="stock-cell">{item.minimumStock}</span>
+                            <span>
+                                <span class={item.statusChipClass}>{item.statusLabel}</span>
+                            </span>
+                            <span class="last-updated-cell">{item.lastUpdatedFormatted}</span>
+                        </div>
+                    </template>
+
+                    <!-- No results after filter -->
+                    <template lwc:if={isFilterEmpty}>
+                        <div class="empty-state">
+                            No products match &ldquo;{searchTerm}&rdquo;
+                        </div>
+                    </template>
+
+                </template>
+
+                <!-- No inventory at all -->
+                <template lwc:else>
+                    <div class="empty-state">
+                        <lightning-icon icon-name="utility:inventory" size="large"
+                            style="color:#dddbda;"></lightning-icon>
+                        <p class="slds-m-top_small">No inventory records found for this store.</p>
+                        <p class="slds-text-body_small slds-text-color_weak">
+                            Inventory is captured during store visits or synced nightly from ERP.
+                        </p>
+                    </div>
+                </template>
+
+            </div><!-- end inventory-table-wrap -->
+
+            <!-- ── Footer: last refresh timestamp ────────────────────────── -->
+            <div slot="footer"
+                 class="slds-text-body_small slds-text-color_weak"
+                 style="text-align:right;padding:0.25rem 0.5rem;">
+                Last refreshed: {lastRefreshedLabel}
+            </div>
+
+        </template><!-- end lwc:else -->
+    </lightning-card>
+</template>

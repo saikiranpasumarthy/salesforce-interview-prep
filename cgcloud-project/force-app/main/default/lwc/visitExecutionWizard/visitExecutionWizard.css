@@ -1,0 +1,267 @@
+/* ─── visitExecutionWizard ───────────────────────────────────────────────────
+   Mobile-first styles for the 4-step visit execution wizard.
+   Optimised for touch targets (min 44px), readable type sizes on small screens,
+   and clear visual hierarchy for field reps working quickly in-store.
+   ─────────────────────────────────────────────────────────────────────────── */
+
+/* ── Step Indicator ─────────────────────────────────────────────────────── */
+.step-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.5rem 0.75rem 0;
+    gap: 0.25rem;
+}
+
+.step-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    flex: 1;
+    font-size: 0.7rem;
+    color: #706e6b;
+    gap: 0.2rem;
+}
+
+.step-item.active {
+    color: #0176d3;
+    font-weight: 700;
+}
+
+.step-item.completed {
+    color: #2e844a;
+}
+
+.step-dot {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #e5e5e5;
+    font-size: 0.75rem;
+    font-weight: 700;
+    border: 2px solid #dddbda;
+    flex-shrink: 0;
+}
+
+.step-item.active .step-dot {
+    background: #0176d3;
+    border-color: #0176d3;
+    color: #fff;
+}
+
+.step-item.completed .step-dot {
+    background: #2e844a;
+    border-color: #2e844a;
+    color: #fff;
+}
+
+.step-connector {
+    height: 2px;
+    flex: 1;
+    background: #dddbda;
+    margin-bottom: 1rem;
+    margin-top: -0.9rem;
+}
+
+.step-connector.completed-line {
+    background: #2e844a;
+}
+
+/* ── Progress bar ──────────────────────────────────────────────────────────── */
+.progress-wrapper {
+    padding: 0.25rem 0.75rem 0.5rem;
+}
+
+/* ── Step Panels ─────────────────────────────────────────────────────────── */
+.step-panel {
+    padding: 1rem 0.75rem;
+    min-height: 280px;
+}
+
+.step-title {
+    font-size: 1rem;
+    font-weight: 700;
+    color: #032d60;
+    margin-bottom: 0.75rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+/* ── Step 1: Check-in Info ──────────────────────────────────────────────── */
+.checkin-info-card {
+    background: #f3f3f3;
+    border-radius: 0.5rem;
+    padding: 0.75rem;
+    margin-bottom: 1rem;
+}
+
+.checkin-store-name {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #032d60;
+    margin-bottom: 0.25rem;
+}
+
+.time-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.8rem;
+    color: #3e3e3c;
+    margin-top: 0.35rem;
+}
+
+.time-label {
+    color: #706e6b;
+}
+
+.checkin-btn-wrap {
+    margin-top: 1rem;
+}
+
+/* ── Step 2: Stock Capture ────────────────────────────────────────────────── */
+.product-stock-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.6rem 0;
+    border-bottom: 1px solid #e5e5e5;
+    gap: 0.5rem;
+}
+
+.product-name {
+    flex: 1;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #181818;
+    min-width: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.stock-input-wrap {
+    width: 80px;
+    flex-shrink: 0;
+}
+
+.oos-badge {
+    background: #ba0517;
+    color: #fff;
+    padding: 0.1rem 0.4rem;
+    border-radius: 0.75rem;
+    font-size: 0.65rem;
+    font-weight: 700;
+    flex-shrink: 0;
+}
+
+/* ── Step 3: Promotion Audit ─────────────────────────────────────────────── */
+.promo-row {
+    padding: 0.75rem 0;
+    border-bottom: 1px solid #e5e5e5;
+}
+
+.promo-name {
+    font-size: 0.88rem;
+    font-weight: 600;
+    color: #181818;
+    margin-bottom: 0.35rem;
+}
+
+.promo-placement {
+    font-size: 0.75rem;
+    color: #706e6b;
+    margin-bottom: 0.5rem;
+}
+
+.promo-controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    align-items: center;
+}
+
+.promo-compliant-label {
+    font-size: 0.78rem;
+    font-weight: 600;
+}
+
+.compliant-yes { color: #2e844a; }
+.compliant-no  { color: #ba0517; }
+
+.photo-toggle-row {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.8rem;
+    color: #3e3e3c;
+    margin-top: 0.25rem;
+}
+
+/* ── Step 4: Order Capture ───────────────────────────────────────────────── */
+.order-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.6rem 0;
+    border-bottom: 1px solid #e5e5e5;
+    gap: 0.5rem;
+}
+
+.order-total-bar {
+    background: #032d60;
+    color: #fff;
+    padding: 0.75rem 1rem;
+    border-radius: 0.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 1rem;
+    font-weight: 700;
+    font-size: 1rem;
+}
+
+/* ── Error & Success ─────────────────────────────────────────────────────── */
+.inline-error {
+    background: #fef1ee;
+    border-left: 4px solid #ba0517;
+    border-radius: 0.25rem;
+    padding: 0.6rem 0.75rem;
+    font-size: 0.82rem;
+    color: #ba0517;
+    margin-bottom: 0.75rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+/* ── Navigation Footer ───────────────────────────────────────────────────── */
+.wizard-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem 0.75rem 0.5rem;
+    border-top: 1px solid #e5e5e5;
+    gap: 0.5rem;
+}
+
+.wizard-footer lightning-button,
+.wizard-footer .btn-spacer {
+    flex: 1;
+}
+
+/* Ensure touch targets are min 44px on mobile */
+@media (max-width: 480px) {
+    .step-label {
+        display: none;
+    }
+    .product-stock-row {
+        flex-wrap: wrap;
+    }
+    .stock-input-wrap {
+        width: 72px;
+    }
+}
