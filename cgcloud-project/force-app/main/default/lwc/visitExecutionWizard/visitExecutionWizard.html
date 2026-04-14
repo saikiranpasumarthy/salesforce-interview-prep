@@ -1,0 +1,343 @@
+<!--
+  visitExecutionWizard
+  ─────────────────────────────────────────────────────────────────────────────
+  4-step guided visit execution wizard displayed on the RetailVisit__c record
+  page in Salesforce Mobile. Drives consistent field rep behaviour across
+  Check-in → Stock Capture → Promotion Audit → Order Capture.
+
+  All Apex calls are imperative (no wire) — visit data must be fresh on every
+  step interaction, never a stale cache. Spinner shown during every async op.
+  Error messages are inline per step, not modal alerts.
+  ─────────────────────────────────────────────────────────────────────────────
+-->
+<template>
+    <lightning-card class="visit-wizard">
+
+        <!-- ── Global Spinner ─────────────────────────────────────────────── -->
+        <template lwc:if={isLoading}>
+            <div class="slds-align_absolute-center slds-p-around_large">
+                <lightning-spinner
+                    alternative-text="Please wait..."
+                    size="medium">
+                </lightning-spinner>
+            </div>
+        </template>
+
+        <template lwc:else>
+
+            <!-- ── Step Progress Indicator ────────────────────────────────── -->
+            <div class="step-bar">
+                <template for:each={stepConfig} for:item="step">
+                    <div key={step.number} class={step.cssClass}>
+                        <div class="step-dot">{step.icon}</div>
+                        <span class="step-label">{step.label}</span>
+                    </div>
+                </template>
+            </div>
+            <div class="progress-wrapper">
+                <lightning-progress-bar
+                    value={progressPercent}
+                    size="x-small">
+                </lightning-progress-bar>
+            </div>
+
+            <!-- ── Inline Error Banner ────────────────────────────────────── -->
+            <template lwc:if={errorMessage}>
+                <div class="inline-error slds-m-horizontal_small slds-m-bottom_small">
+                    <lightning-icon
+                        icon-name="utility:error"
+                        size="x-small"
+                        alternative-text="Error">
+                    </lightning-icon>
+                    <span>{errorMessage}</span>
+                </div>
+            </template>
+
+            <!-- ════════════════════════════════════════════════════════════ -->
+            <!-- STEP 1 — CHECK-IN                                           -->
+            <!-- ════════════════════════════════════════════════════════════ -->
+            <template lwc:if={isStep1}>
+                <div class="step-panel">
+                    <div class="step-title">
+                        <lightning-icon icon-name="utility:location" size="small"></lightning-icon>
+                        Check In to Store
+                    </div>
+
+                    <div class="checkin-info-card">
+                        <div class="checkin-store-name">{visitData.storeName}</div>
+                        <div class="time-row">
+                            <span class="time-label">Planned</span>
+                            <span>{visitData.plannedTime}</span>
+                        </div>
+                        <div class="time-row">
+                            <span class="time-label">Current time</span>
+                            <span>{currentTimeFormatted}</span>
+                        </div>
+                        <div class="time-row">
+                            <span class="time-label">Status</span>
+                            <lightning-badge label={visitData.status}></lightning-badge>
+                        </div>
+                    </div>
+
+                    <p class="slds-text-body_small slds-text-color_weak slds-m-bottom_medium">
+                        Confirm you are at the store location before checking in.
+                        Check-in is only allowed within the planned visit window.
+                    </p>
+
+                    <template lwc:if={isAlreadyCheckedIn}>
+                        <div class="slds-notify slds-notify_alert slds-theme_success slds-m-bottom_small"
+                             style="border-radius:0.35rem;">
+                            <lightning-icon icon-name="utility:success" size="x-small"
+                                alternative-text="Checked in"></lightning-icon>
+                            &nbsp;Already checked in at {visitData.actualStartTime}
+                        </div>
+                    </template>
+
+                    <template lwc:else>
+                        <div class="checkin-btn-wrap">
+                            <lightning-button
+                                variant="brand"
+                                label="Check In Now"
+                                icon-name="utility:location"
+                                onclick={handleCheckIn}
+                                class="slds-size_1-of-1">
+                            </lightning-button>
+                        </div>
+                    </template>
+                </div>
+            </template>
+
+            <!-- ════════════════════════════════════════════════════════════ -->
+            <!-- STEP 2 — STOCK CAPTURE                                      -->
+            <!-- ════════════════════════════════════════════════════════════ -->
+            <template lwc:if={isStep2}>
+                <div class="step-panel">
+                    <div class="step-title">
+                        <lightning-icon icon-name="utility:product_catalog" size="small"></lightning-icon>
+                        Stock Capture
+                        <lightning-badge label={productCountLabel} variant="inverse"></lightning-badge>
+                    </div>
+
+                    <p class="slds-text-body_small slds-text-color_weak slds-m-bottom_small">
+                        Enter the current shelf stock count for each product.
+                        Items below minimum stock will be flagged automatically.
+                    </p>
+
+                    <!-- Product list header -->
+                    <div class="inv-row header-row">
+                        <span>Product</span>
+                        <span class="stock-cell">Count</span>
+                        <span style="width:56px;text-align:center;">Min</span>
+                        <span style="width:56px;text-align:center;">Status</span>
+                    </div>
+
+                    <template for:each={stockEntries} for:item="entry">
+                        <div key={entry.productId} class="product-stock-row">
+                            <span class="product-name" title={entry.productName}>
+                                {entry.productName}
+                            </span>
+                            <div class="stock-input-wrap">
+                                <lightning-input
+                                    type="number"
+                                    min="0"
+                                    step="1"
+                                    value={entry.quantity}
+                                    data-id={entry.productId}
+                                    label={entry.productName}
+                                    variant="label-hidden"
+                                    onchange={handleStockChange}>
+                                </lightning-input>
+                            </div>
+                            <span style="width:56px;text-align:center;font-size:0.78rem;color:#706e6b;">
+                                {entry.minStock}
+                            </span>
+                            <template lwc:if={entry.isOos}>
+                                <span class="oos-badge">OOS</span>
+                            </template>
+                            <template lwc:else>
+                                <lightning-icon
+                                    icon-name="utility:check"
+                                    size="x-small"
+                                    style="color:#2e844a;">
+                                </lightning-icon>
+                            </template>
+                        </div>
+                    </template>
+
+                    <template lwc:if={hasOosItems}>
+                        <div class="slds-notify slds-notify_alert slds-theme_warning slds-m-top_small"
+                             style="border-radius:0.35rem;font-size:0.82rem;">
+                            <lightning-icon icon-name="utility:warning" size="x-small"
+                                alternative-text="OOS warning"></lightning-icon>
+                            &nbsp;{oosCountLabel} — an Out of Stock alert will be created on completion.
+                        </div>
+                    </template>
+                </div>
+            </template>
+
+            <!-- ════════════════════════════════════════════════════════════ -->
+            <!-- STEP 3 — PROMOTION AUDIT                                    -->
+            <!-- ════════════════════════════════════════════════════════════ -->
+            <template lwc:if={isStep3}>
+                <div class="step-panel">
+                    <div class="step-title">
+                        <lightning-icon icon-name="utility:kanban" size="small"></lightning-icon>
+                        Promotion Audit
+                        <lightning-badge label={promoCountLabel} variant="inverse"></lightning-badge>
+                    </div>
+
+                    <template lwc:if={hasNoPromos}>
+                        <div class="empty-state">
+                            <lightning-icon icon-name="utility:check" size="large"
+                                style="color:#2e844a;"></lightning-icon>
+                            <p class="slds-m-top_small">No active promotions for this store.</p>
+                            <p class="slds-text-body_small slds-text-color_weak">
+                                Proceed to order capture.
+                            </p>
+                        </div>
+                    </template>
+
+                    <template lwc:else>
+                        <template for:each={auditEntries} for:item="entry">
+                            <div key={entry.promotionId} class="promo-row">
+                                <div class="promo-name">{entry.promotionName}</div>
+                                <div class="promo-placement">
+                                    Expected placement:
+                                    <strong>{entry.expectedPlacement}</strong>
+                                    &rarr; Product: {entry.productName}
+                                </div>
+                                <div class="promo-controls">
+                                    <lightning-input
+                                        type="checkbox"
+                                        label="Compliant"
+                                        checked={entry.isCompliant}
+                                        data-id={entry.promotionId}
+                                        onchange={handleAuditCompliance}>
+                                    </lightning-input>
+                                    <div class="photo-toggle-row">
+                                        <lightning-input
+                                            type="checkbox"
+                                            label="Photo captured"
+                                            checked={entry.photoCaptured}
+                                            data-id={entry.promotionId}
+                                            data-field="photo"
+                                            onchange={handleAuditPhoto}>
+                                        </lightning-input>
+                                    </div>
+                                </div>
+                                <lightning-textarea
+                                    label="Notes (optional)"
+                                    value={entry.notes}
+                                    max-length="500"
+                                    data-id={entry.promotionId}
+                                    onchange={handleAuditNotes}
+                                    class="slds-m-top_x-small">
+                                </lightning-textarea>
+                            </div>
+                        </template>
+                    </template>
+
+                    <div class="slds-m-top_small slds-text-body_small slds-text-color_weak">
+                        Compliance: {auditSummaryLabel}
+                    </div>
+                </div>
+            </template>
+
+            <!-- ════════════════════════════════════════════════════════════ -->
+            <!-- STEP 4 — ORDER CAPTURE                                      -->
+            <!-- ════════════════════════════════════════════════════════════ -->
+            <template lwc:if={isStep4}>
+                <div class="step-panel">
+                    <div class="step-title">
+                        <lightning-icon icon-name="utility:cart" size="small"></lightning-icon>
+                        Capture Order
+                    </div>
+
+                    <p class="slds-text-body_small slds-text-color_weak slds-m-bottom_small">
+                        Enter the quantity to order for each product.
+                        Leave at 0 to skip. Order total updates in real-time.
+                    </p>
+
+                    <template for:each={orderEntries} for:item="entry">
+                        <div key={entry.productId} class="order-row">
+                            <span class="product-name" title={entry.productName}>
+                                {entry.productName}
+                            </span>
+                            <span class="slds-text-body_small slds-text-color_weak"
+                                  style="font-size:0.75rem;">
+                                {entry.unitPriceFormatted}
+                            </span>
+                            <div class="stock-input-wrap">
+                                <lightning-input
+                                    type="number"
+                                    min="0"
+                                    step="1"
+                                    value={entry.quantity}
+                                    data-id={entry.productId}
+                                    label={entry.productName}
+                                    variant="label-hidden"
+                                    onchange={handleOrderQtyChange}>
+                                </lightning-input>
+                            </div>
+                            <span style="text-align:right;font-size:0.82rem;font-weight:600;min-width:72px;">
+                                {entry.lineTotalFormatted}
+                            </span>
+                        </div>
+                    </template>
+
+                    <!-- Running total bar -->
+                    <div class="order-total-bar">
+                        <span>Order Total</span>
+                        <span>{orderTotalFormatted}</span>
+                    </div>
+
+                    <template lwc:if={isOrderEmpty}>
+                        <div class="slds-text-body_small slds-text-color_weak slds-m-top_x-small"
+                             style="text-align:center;">
+                            No items in order yet — you can still complete the visit.
+                        </div>
+                    </template>
+                </div>
+            </template>
+
+            <!-- ── Navigation Footer ──────────────────────────────────────── -->
+            <div class="wizard-footer" slot="footer">
+                <template lwc:if={showPrevBtn}>
+                    <lightning-button
+                        label="Previous"
+                        icon-name="utility:back"
+                        onclick={handlePrevious}>
+                    </lightning-button>
+                </template>
+                <template lwc:else>
+                    <span class="btn-spacer"></span>
+                </template>
+
+                <span class="slds-text-body_small slds-text-color_weak"
+                      style="text-align:center;flex:1;">
+                    Step {currentStep} of {totalSteps}
+                </span>
+
+                <template lwc:if={showNextBtn}>
+                    <lightning-button
+                        variant="brand"
+                        label="Next"
+                        icon-name="utility:forward"
+                        icon-position="right"
+                        onclick={handleNext}>
+                    </lightning-button>
+                </template>
+                <template lwc:if={showCompleteBtn}>
+                    <lightning-button
+                        variant="success"
+                        label="Complete Visit"
+                        icon-name="utility:check"
+                        icon-position="right"
+                        onclick={handleCompleteVisit}>
+                    </lightning-button>
+                </template>
+            </div>
+
+        </template><!-- end lwc:else (not loading) -->
+    </lightning-card>
+</template>

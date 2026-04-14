@@ -1,0 +1,230 @@
+/* ─── orderCaptureDashboard ──────────────────────────────────────────────────
+   Styles for the order history dashboard shown to Area Managers.
+   Includes date range filter, summary tiles, order table, and line-item modal.
+   ─────────────────────────────────────────────────────────────────────────── */
+
+/* ── Date Range Filter ───────────────────────────────────────────────────── */
+.filter-row {
+    display: flex;
+    gap: 0.5rem;
+    padding: 0.75rem 0.5rem;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.filter-btn {
+    padding: 0.35rem 0.9rem;
+    border-radius: 1rem;
+    border: 1px solid #dddbda;
+    background: #fff;
+    font-size: 0.8rem;
+    cursor: pointer;
+    color: #3e3e3c;
+    font-weight: 600;
+    transition: background 0.1s, color 0.1s;
+}
+
+.filter-btn.active {
+    background: #032d60;
+    color: #fff;
+    border-color: #032d60;
+}
+
+/* ── Summary Tiles ───────────────────────────────────────────────────────── */
+.summary-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.5rem;
+    padding: 0 0.5rem 0.75rem;
+}
+
+@media (min-width: 600px) {
+    .summary-grid {
+        grid-template-columns: repeat(4, 1fr);
+    }
+}
+
+.summary-tile {
+    background: #f3f3f3;
+    border-radius: 0.5rem;
+    padding: 0.7rem 0.75rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+}
+
+.summary-tile.tile-pending  { background: #fffae7; }
+.summary-tile.tile-failed   { background: #fef1ee; }
+
+.tile-value {
+    font-size: 1.35rem;
+    font-weight: 800;
+    color: #032d60;
+    line-height: 1.1;
+}
+
+.summary-tile.tile-failed .tile-value { color: #ba0517; }
+.summary-tile.tile-pending .tile-value { color: #7e4900; }
+
+.tile-label {
+    font-size: 0.7rem;
+    color: #706e6b;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+/* ── Orders Table ────────────────────────────────────────────────────────── */
+.orders-table-wrap {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+.order-row {
+    display: grid;
+    grid-template-columns: 110px 90px 1fr 90px 90px 100px;
+    align-items: center;
+    padding: 0.55rem 0.75rem;
+    border-bottom: 1px solid #e5e5e5;
+    font-size: 0.82rem;
+    gap: 0.25rem;
+    cursor: pointer;
+    transition: background 0.1s;
+}
+
+.order-row:hover {
+    background: #f3f9ff;
+}
+
+.order-row.header-row {
+    background: #f3f3f3;
+    font-weight: 700;
+    font-size: 0.75rem;
+    color: #706e6b;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    border-bottom: 2px solid #dddbda;
+    cursor: default;
+}
+
+.order-row.header-row:hover {
+    background: #f3f3f3;
+}
+
+.order-num {
+    font-weight: 600;
+    color: #0176d3;
+    text-decoration: underline;
+}
+
+.amount-cell {
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+    font-weight: 600;
+}
+
+/* ERP Sync Status chips */
+.sync-chip {
+    display: inline-block;
+    padding: 0.15rem 0.55rem;
+    border-radius: 0.75rem;
+    font-size: 0.68rem;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.chip-synced  { background: #cdefc4; color: #2e6d11; }
+.chip-pending { background: #fde8c8; color: #7e4900; }
+.chip-failed  { background: #fedad7; color: #7f1000; }
+
+/* ── Line-item Modal ─────────────────────────────────────────────────────── */
+.modal-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.45);
+    z-index: 8000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+}
+
+.modal-panel {
+    background: #fff;
+    border-radius: 0.5rem;
+    width: 100%;
+    max-width: 560px;
+    max-height: 80vh;
+    overflow-y: auto;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 1.25rem 0.75rem;
+    border-bottom: 1px solid #e5e5e5;
+}
+
+.modal-title {
+    font-size: 1rem;
+    font-weight: 700;
+    color: #032d60;
+}
+
+.modal-body {
+    padding: 0.75rem 1.25rem 1rem;
+}
+
+.line-item-row {
+    display: grid;
+    grid-template-columns: 1fr 60px 90px 90px;
+    gap: 0.25rem;
+    padding: 0.45rem 0;
+    border-bottom: 1px solid #f3f3f3;
+    font-size: 0.82rem;
+    align-items: center;
+}
+
+.line-item-row.li-header {
+    font-weight: 700;
+    font-size: 0.72rem;
+    color: #706e6b;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.li-amount {
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+}
+
+.modal-total-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.75rem 0 0;
+    font-weight: 800;
+    font-size: 0.95rem;
+    color: #032d60;
+    border-top: 2px solid #e5e5e5;
+    margin-top: 0.5rem;
+}
+
+/* ── Empty State ─────────────────────────────────────────────────────────── */
+.empty-state {
+    text-align: center;
+    padding: 2rem 1rem;
+    color: #706e6b;
+    font-size: 0.88rem;
+}
+
+/* ── Mobile ──────────────────────────────────────────────────────────────── */
+@media (max-width: 520px) {
+    .order-row {
+        grid-template-columns: 90px 1fr 90px 90px;
+    }
+    .order-row > :nth-child(3),
+    .order-row > :nth-child(4) {
+        display: none;
+    }
+}

@@ -1,0 +1,226 @@
+<!--
+  orderCaptureDashboard
+  ─────────────────────────────────────────────────────────────────────────────
+  Displayed on the Account (Retail Store) record page for Area Managers.
+  Shows order history with date-range filter (7 / 30 / 90 days), summary
+  tiles (Total Orders, Total Value, Pending ERP Sync, Failed), a sortable
+  orders table, and a drill-down modal for line items.
+
+  Imperative Apex — every filter change triggers a fresh Apex call.
+  Wire is NOT used because data changes based on user filter selection,
+  not just the record context.
+
+  Modal state managed with JS boolean + lwc:if conditional rendering.
+  No custom events or child components — self-contained.
+  ─────────────────────────────────────────────────────────────────────────────
+-->
+<template>
+    <lightning-card icon-name="standard:orders">
+        <span slot="title">Order History</span>
+
+        <!-- ── Spinner ────────────────────────────────────────────────────── -->
+        <template lwc:if={isLoading}>
+            <div class="slds-align_absolute-center slds-p-around_large">
+                <lightning-spinner alternative-text="Loading orders..." size="medium">
+                </lightning-spinner>
+            </div>
+        </template>
+
+        <template lwc:else>
+
+            <!-- ── Error ──────────────────────────────────────────────────── -->
+            <template lwc:if={errorMessage}>
+                <div style="background:#fef1ee;border-left:4px solid #ba0517;
+                     padding:0.6rem 0.75rem;border-radius:0.25rem;
+                     font-size:0.82rem;color:#ba0517;margin:0.5rem;">
+                    {errorMessage}
+                </div>
+            </template>
+
+            <!-- ── Date Range Filter ───────────────────────────────────────── -->
+            <div class="filter-row">
+                <span class="slds-text-body_small slds-text-color_weak"
+                      style="flex-shrink:0;">Show:</span>
+                <template for:each={filterOptions} for:item="opt">
+                    <button
+                        key={opt.value}
+                        class={opt.cssClass}
+                        data-value={opt.value}
+                        onclick={handleFilterChange}>
+                        {opt.label}
+                    </button>
+                </template>
+                <span class="slds-text-body_small slds-text-color_weak"
+                      style="margin-left:auto;flex-shrink:0;">
+                    {orderCountLabel}
+                </span>
+            </div>
+
+            <!-- ── Summary Tiles ───────────────────────────────────────────── -->
+            <div class="summary-grid">
+                <div class="summary-tile">
+                    <div class="tile-value">{summary.totalOrders}</div>
+                    <div class="tile-label">Total Orders</div>
+                </div>
+                <div class="summary-tile">
+                    <div class="tile-value">{summary.totalValueFormatted}</div>
+                    <div class="tile-label">Total Value</div>
+                </div>
+                <div class="summary-tile tile-pending">
+                    <div class="tile-value">{summary.pendingSync}</div>
+                    <div class="tile-label">Pending ERP Sync</div>
+                </div>
+                <div class="summary-tile tile-failed">
+                    <div class="tile-value">{summary.failedSync}</div>
+                    <div class="tile-label">Sync Failed</div>
+                </div>
+            </div>
+
+            <!-- ── Orders Table ────────────────────────────────────────────── -->
+            <div class="orders-table-wrap">
+
+                <template lwc:if={hasOrders}>
+                    <!-- Header -->
+                    <div class="order-row header-row">
+                        <span>Order #</span>
+                        <span>Visit Date</span>
+                        <span>Rep</span>
+                        <span class="amount-cell">Total</span>
+                        <span>Status</span>
+                        <span>ERP Sync</span>
+                    </div>
+
+                    <!-- Data rows -->
+                    <template for:each={orders} for:item="order">
+                        <div key={order.id}
+                             class="order-row"
+                             data-id={order.id}
+                             onclick={handleOrderRowClick}>
+                            <span class="order-num">{order.orderNumber}</span>
+                            <span>{order.visitDateFormatted}</span>
+                            <span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+                                {order.repName}
+                            </span>
+                            <span class="amount-cell">{order.totalAmountFormatted}</span>
+                            <span>
+                                <lightning-badge label={order.status}></lightning-badge>
+                            </span>
+                            <span>
+                                <span class={order.syncChipClass}>{order.erpSyncStatus}</span>
+                            </span>
+                        </div>
+                    </template>
+
+                </template>
+
+                <template lwc:else>
+                    <div class="empty-state">
+                        <lightning-icon icon-name="utility:orders" size="large"
+                            style="color:#dddbda;"></lightning-icon>
+                        <p class="slds-m-top_small">
+                            No orders found in the last {selectedDays} days.
+                        </p>
+                    </div>
+                </template>
+
+            </div><!-- end orders-table-wrap -->
+
+        </template><!-- end lwc:else (not loading) -->
+    </lightning-card>
+
+    <!-- ════════════════════════════════════════════════════════════════════ -->
+    <!-- LINE-ITEM DETAIL MODAL                                              -->
+    <!-- ════════════════════════════════════════════════════════════════════ -->
+    <template lwc:if={isModalOpen}>
+        <div class="modal-backdrop" onclick={handleModalBackdropClick}>
+            <div class="modal-panel" onclick={stopPropagation}>
+
+                <!-- Modal Header -->
+                <div class="modal-header">
+                    <span class="modal-title">
+                        Order {selectedOrder.orderNumber} — Line Items
+                    </span>
+                    <lightning-button-icon
+                        icon-name="utility:close"
+                        alternative-text="Close"
+                        variant="bare"
+                        size="small"
+                        onclick={handleCloseModal}>
+                    </lightning-button-icon>
+                </div>
+
+                <!-- Modal Body -->
+                <div class="modal-body">
+
+                    <!-- Order meta -->
+                    <div class="slds-grid slds-gutters_small slds-m-bottom_small">
+                        <div class="slds-col">
+                            <span class="slds-text-body_small slds-text-color_weak">Visit Date</span>
+                            <p class="slds-text-body_regular">{selectedOrder.visitDateFormatted}</p>
+                        </div>
+                        <div class="slds-col">
+                            <span class="slds-text-body_small slds-text-color_weak">Rep</span>
+                            <p class="slds-text-body_regular">{selectedOrder.repName}</p>
+                        </div>
+                        <div class="slds-col">
+                            <span class="slds-text-body_small slds-text-color_weak">ERP Status</span>
+                            <p>
+                                <span class={selectedOrder.syncChipClass}>
+                                    {selectedOrder.erpSyncStatus}
+                                </span>
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Spinner while loading line items -->
+                    <template lwc:if={isLineItemLoading}>
+                        <div class="slds-align_absolute-center slds-p-around_medium">
+                            <lightning-spinner size="small"
+                                alternative-text="Loading line items...">
+                            </lightning-spinner>
+                        </div>
+                    </template>
+
+                    <template lwc:else>
+                        <!-- Line items table -->
+                        <div class="line-item-row li-header">
+                            <span>Product</span>
+                            <span style="text-align:right;">Qty</span>
+                            <span class="li-amount">Unit Price</span>
+                            <span class="li-amount">Total</span>
+                        </div>
+
+                        <template for:each={selectedOrderLineItems} for:item="li">
+                            <div key={li.id} class="line-item-row">
+                                <span style="overflow:hidden;text-overflow:ellipsis;
+                                             white-space:nowrap;"
+                                      title={li.productName}>
+                                    {li.productName}
+                                </span>
+                                <span style="text-align:right;">{li.quantity}</span>
+                                <span class="li-amount">{li.unitPriceFormatted}</span>
+                                <span class="li-amount">{li.totalPriceFormatted}</span>
+                            </div>
+                        </template>
+
+                        <!-- Modal total -->
+                        <div class="modal-total-row">
+                            <span>Order Total</span>
+                            <span>{selectedOrder.totalAmountFormatted}</span>
+                        </div>
+
+                        <!-- ERP sync error message if failed -->
+                        <template lwc:if={selectedOrder.hasSyncError}>
+                            <div style="margin-top:0.75rem;background:#fef1ee;border-radius:0.25rem;
+                                 padding:0.6rem;font-size:0.8rem;color:#ba0517;">
+                                <strong>ERP Sync Error:</strong> {selectedOrder.erpSyncMessage}
+                            </div>
+                        </template>
+
+                    </template>
+                </div><!-- end modal-body -->
+
+            </div><!-- end modal-panel -->
+        </div><!-- end modal-backdrop -->
+    </template>
+</template>
