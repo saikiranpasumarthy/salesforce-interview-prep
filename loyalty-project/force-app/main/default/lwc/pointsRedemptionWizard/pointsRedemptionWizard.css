@@ -1,0 +1,357 @@
+/* pointsRedemptionWizard.css — 4-step redemption modal styles */
+
+/* ── Modal overlay ───────────────────────────────────────────────────────────── */
+.modal-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 8000;
+}
+
+.redemption-modal {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    z-index: 8001;
+    width: 90vw;
+    max-width: 560px;
+    max-height: 90vh;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+}
+
+/* ── Modal header ────────────────────────────────────────────────────────────── */
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.25rem 1.5rem;
+    border-bottom: 1px solid #e4e4e4;
+    position: sticky;
+    top: 0;
+    background: #fff;
+    z-index: 1;
+}
+
+.modal-title {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #032d60;
+    margin: 0;
+}
+
+.modal-close {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0.25rem;
+    border-radius: 4px;
+    color: #706e6b;
+    display: flex;
+}
+
+.modal-close:hover { background: #f4f4f4; }
+
+/* ── Step indicator ──────────────────────────────────────────────────────────── */
+.step-indicator {
+    display: flex;
+    justify-content: center;
+    gap: 0;
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.step-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    flex: 1;
+    position: relative;
+}
+
+.step-item:not(:last-child)::after {
+    content: '';
+    position: absolute;
+    top: 14px;
+    left: calc(50% + 14px);
+    right: calc(-50% + 14px);
+    height: 2px;
+    background: #e4e4e4;
+    z-index: 0;
+}
+
+.step-item--complete:not(:last-child)::after { background: #0070d2; }
+
+.step-circle {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: #e4e4e4;
+    color: #706e6b;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.75rem;
+    font-weight: 700;
+    position: relative;
+    z-index: 1;
+    transition: all 0.2s;
+}
+
+.step-item--active   .step-circle { background: #0070d2; color: #fff; }
+.step-item--complete .step-circle { background: #027858; color: #fff; }
+
+.step-label {
+    font-size: 0.65rem;
+    margin-top: 0.25rem;
+    color: #706e6b;
+    text-align: center;
+    white-space: nowrap;
+}
+
+.step-item--active   .step-label { color: #0070d2; font-weight: 600; }
+.step-item--complete .step-label { color: #027858; }
+
+/* ── Modal body ──────────────────────────────────────────────────────────────── */
+.modal-body {
+    flex: 1;
+    overflow-y: auto;
+}
+
+.step-intro {
+    font-size: 0.9rem;
+    color: #3e3e3c;
+    margin: 0 0 1rem 0;
+    line-height: 1.5;
+}
+
+/* ── Reward cards ────────────────────────────────────────────────────────────── */
+.reward-cards { gap: 0.75rem; }
+
+.reward-card {
+    width: 100%;
+    background: #fff;
+    border: 2px solid #e4e4e4;
+    border-radius: 10px;
+    padding: 1.25rem;
+    cursor: pointer;
+    text-align: left;
+    transition: all 0.2s;
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    min-height: 130px;
+}
+
+.reward-card:hover:not(:disabled) {
+    border-color: #0070d2;
+    box-shadow: 0 2px 10px rgba(0, 112, 210, 0.15);
+}
+
+.reward-card--selected {
+    border-color: #0070d2;
+    background: #f0f8ff;
+    box-shadow: 0 2px 10px rgba(0, 112, 210, 0.2);
+}
+
+.reward-card--disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
+.reward-icon    { font-size: 1.75rem; line-height: 1; }
+.reward-title   { font-size: 1rem;    font-weight: 700; color: #032d60; }
+.reward-subtitle { font-size: 0.8rem; color: #706e6b; }
+
+.reward-tier-badge {
+    display: inline-block;
+    font-size: 0.65rem;
+    font-weight: 600;
+    padding: 0.15rem 0.5rem;
+    border-radius: 10px;
+    background: #e4e4e4;
+    color: #3e3e3c;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    width: fit-content;
+    margin-top: 0.25rem;
+}
+
+.reward-tier-badge--gold     { background: #fff9e6; color: #9e6c00; }
+.reward-tier-badge--platinum { background: #f0f0f0; color: #444; }
+
+/* ── Step 2 — Points preview ─────────────────────────────────────────────────── */
+.points-input-section { margin-bottom: 1rem; }
+
+.redemption-preview {
+    background: #f8f8ff;
+    border: 1px solid #d9d9ff;
+    border-radius: 8px;
+    padding: 1rem;
+}
+
+.preview-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.4rem 0;
+    border-bottom: 1px solid #eeeeee;
+}
+
+.preview-row:last-child { border-bottom: none; }
+
+.preview-label { font-size: 0.85rem; color: #706e6b; }
+
+.preview-value {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #032d60;
+}
+
+.preview-value--large    { font-size: 1.375rem; color: #027858; }
+.preview-value--negative { color: #ba0517; }
+
+.step-error {
+    color: #ba0517;
+    font-size: 0.8rem;
+    font-weight: 500;
+}
+
+/* ── Step 3 — Confirmation ────────────────────────────────────────────────────── */
+.confirm-title {
+    font-size: 1.125rem;
+    font-weight: 700;
+    color: #032d60;
+    margin: 0 0 1rem 0;
+}
+
+.confirmation-summary {
+    background: #f4f6fe;
+    border: 1px solid #dde3f0;
+    border-radius: 8px;
+    padding: 1rem;
+}
+
+.summary-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid #e8eaf6;
+}
+
+.summary-row:last-child { border-bottom: none; }
+.summary-row--highlight .summary-value { font-size: 1.125rem; color: #027858; }
+
+.summary-label { font-size: 0.85rem; color: #706e6b; }
+.summary-value { font-size: 0.95rem; font-weight: 600; color: #032d60; }
+
+/* ── Step 4 — Success ─────────────────────────────────────────────────────────── */
+.step4-container { text-align: center; padding: 1rem 0; }
+
+.success-icon {
+    font-size: 3.5rem;
+    line-height: 1;
+    margin-bottom: 0.75rem;
+}
+
+.success-title {
+    font-size: 1.375rem;
+    font-weight: 700;
+    color: #027858;
+    margin: 0 0 0.5rem 0;
+}
+
+.success-subtitle {
+    font-size: 0.875rem;
+    color: #706e6b;
+    margin: 0 0 1.5rem 0;
+}
+
+.voucher-code-display { margin: 1rem 0; }
+
+.voucher-code-label {
+    font-size: 0.8rem;
+    color: #706e6b;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin: 0 0 0.5rem 0;
+}
+
+.voucher-code-box {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: #f0f8ff;
+    border: 2px dashed #0070d2;
+    border-radius: 8px;
+    padding: 0.75rem 1.25rem;
+}
+
+.voucher-code-text {
+    font-family: monospace;
+    font-size: 1.375rem;
+    font-weight: 700;
+    color: #032d60;
+    letter-spacing: 0.08em;
+}
+
+.copy-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0.25rem;
+    color: #0070d2;
+}
+
+.voucher-details {
+    background: #f8f8ff;
+    border-radius: 8px;
+    padding: 0.75rem 1rem;
+    display: inline-block;
+    min-width: 260px;
+    text-align: left;
+}
+
+.detail-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.35rem 0;
+}
+
+.detail-label { font-size: 0.8rem; color: #706e6b; }
+.detail-value { font-size: 0.9rem; font-weight: 600; color: #032d60; }
+
+.voucher-instructions {
+    font-size: 0.8rem;
+    color: #706e6b;
+    font-style: italic;
+}
+
+/* ── Modal footer ────────────────────────────────────────────────────────────── */
+.modal-footer {
+    border-top: 1px solid #e4e4e4;
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    padding: 1rem 1.5rem;
+    background: #fafafa;
+    position: sticky;
+    bottom: 0;
+}
+
+/* ── Mobile ──────────────────────────────────────────────────────────────────── */
+@media (max-width: 480px) {
+    .redemption-modal { width: 96vw; max-height: 95vh; }
+    .modal-header     { padding: 1rem; }
+    .modal-body       { padding: 1rem; }
+    .step-label       { display: none; }
+    .voucher-code-text { font-size: 1rem; }
+    .reward-cards { flex-direction: column; }
+}

@@ -1,0 +1,249 @@
+/* promotionBanner.css — Active promotions horizontal carousel */
+
+/* ── Container ───────────────────────────────────────────────────────────────── */
+.promotion-banner {
+    width: 100%;
+    position: relative;
+}
+
+/* ── Loading / error / empty states ─────────────────────────────────────────── */
+.promo-loading {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 80px;
+}
+
+.promo-error {
+    display: flex;
+    align-items: center;
+    font-size: 0.8rem;
+    color: #706e6b;
+    padding: 0.5rem 0;
+}
+
+.promo-empty {
+    text-align: center;
+    padding: 2rem 1rem;
+    background: #fafafa;
+    border-radius: 10px;
+    border: 1px dashed #e4e4e4;
+}
+
+.promo-empty-icon {
+    font-size: 2.5rem;
+    line-height: 1;
+    margin-bottom: 0.75rem;
+}
+
+.promo-empty-title {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #3e3e3c;
+    margin: 0 0 0.35rem 0;
+}
+
+.promo-empty-subtitle {
+    font-size: 0.8rem;
+    color: #706e6b;
+    margin: 0;
+}
+
+/* ── Scroll container ────────────────────────────────────────────────────────── */
+.promo-scroll-container {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.promo-track {
+    display: flex;
+    gap: 1rem;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;     /* Firefox */
+    padding: 0.5rem 0.25rem;
+    flex: 1;
+}
+
+.promo-track::-webkit-scrollbar { display: none; } /* Chrome/Safari */
+
+/* ── Arrow navigation buttons ───────────────────────────────────────────────── */
+.scroll-btn {
+    flex-shrink: 0;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: #fff;
+    border: 1px solid #e4e4e4;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+    transition: all 0.15s;
+    color: #3e3e3c;
+    padding: 0;
+}
+
+.scroll-btn:hover {
+    border-color: #0070d2;
+    color: #0070d2;
+    box-shadow: 0 2px 8px rgba(0, 112, 210, 0.2);
+}
+
+/* Hide arrows on mobile — use touch scroll instead */
+@media (max-width: 600px) {
+    .scroll-btn { display: none; }
+}
+
+/* ── Promotion cards ─────────────────────────────────────────────────────────── */
+.promo-card {
+    flex-shrink: 0;
+    width: 260px;
+    background: #fff;
+    border: 1px solid #e4e4e4;
+    border-radius: 12px;
+    overflow: hidden;
+    scroll-snap-align: start;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.promo-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+}
+
+/* ── Multiplier badge (top accent bar) ──────────────────────────────────────── */
+.promo-multiplier-badge {
+    background: linear-gradient(135deg, #032d60 0%, #0070d2 100%);
+    color: #fff;
+    font-size: 1rem;
+    font-weight: 800;
+    text-align: center;
+    padding: 0.6rem 1rem;
+    letter-spacing: 0.02em;
+}
+
+/* ── Card body ───────────────────────────────────────────────────────────────── */
+.promo-card-body {
+    padding: 0.875rem 1rem;
+    flex: 1;
+}
+
+.promo-name {
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: #032d60;
+    margin: 0 0 0.4rem 0;
+    line-height: 1.3;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.promo-description {
+    font-size: 0.775rem;
+    color: #706e6b;
+    margin: 0 0 0.6rem 0;
+    line-height: 1.4;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.promo-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+    margin-bottom: 0.5rem;
+}
+
+/* ── Tier badges ─────────────────────────────────────────────────────────────── */
+.promo-tier-badge {
+    display: inline-block;
+    font-size: 0.65rem;
+    font-weight: 700;
+    padding: 0.15rem 0.5rem;
+    border-radius: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.promo-tier-badge--all      { background: #e6f0ff; color: #0070d2; }
+.promo-tier-badge--silver   { background: #f0f0f0; color: #555; }
+.promo-tier-badge--gold     { background: #fff9e6; color: #9e6c00; }
+.promo-tier-badge--platinum { background: #f8f8f8; color: #3a3a3a; border: 1px solid #ccc; }
+
+.promo-category-badge {
+    display: inline-block;
+    font-size: 0.65rem;
+    font-weight: 600;
+    padding: 0.15rem 0.5rem;
+    border-radius: 10px;
+    background: #e6f0ff;
+    color: #0070d2;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.promo-dates {
+    font-size: 0.7rem;
+    color: #999;
+    margin: 0;
+}
+
+/* ── Card footer / CTA ───────────────────────────────────────────────────────── */
+.promo-card-footer {
+    border-top: 1px solid #f0f0f0;
+    padding: 0.6rem 1rem;
+}
+
+.promo-cta-link {
+    display: flex;
+    align-items: center;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #0070d2;
+    text-decoration: none;
+}
+
+.promo-cta-link:hover { text-decoration: underline; }
+
+/* ── Footer row (refresh indicator) ─────────────────────────────────────────── */
+.promo-footer {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 0.35rem;
+    padding: 0.35rem 0.25rem 0;
+}
+
+.promo-refresh-label {
+    font-size: 0.7rem;
+    color: #b0b0b0;
+}
+
+.promo-refresh-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0.2rem;
+    color: #b0b0b0;
+    transition: color 0.15s;
+}
+
+.promo-refresh-btn:hover { color: #0070d2; }
+
+/* ── Mobile ──────────────────────────────────────────────────────────────────── */
+@media (max-width: 480px) {
+    .promo-card { width: 220px; }
+    .promo-name { font-size: 0.85rem; }
+}
