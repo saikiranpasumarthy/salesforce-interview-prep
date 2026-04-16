@@ -1,0 +1,145 @@
+<!-- promotionBanner.html
+     Horizontal scrollable promotion card row for Experience Cloud.
+     Auto-refreshes every 5 minutes via setInterval.
+     Mobile-friendly carousel with touch scroll.
+     API v62.0 — uses lwc:if / lwc:else (not if:true).
+-->
+<template>
+    <div class="promotion-banner">
+
+        <!-- ── Loading state ─────────────────────────────────────────── -->
+        <lwc:if isTrue={isLoading}>
+            <div class="promo-loading slds-p-vertical_medium">
+                <lightning-spinner
+                    alternative-text="Loading promotions"
+                    size="small"
+                    variant="brand">
+                </lightning-spinner>
+            </div>
+        </lwc:if>
+
+        <!-- ── Error state ───────────────────────────────────────────── -->
+        <lwc:if isTrue={hasError}>
+            <div class="promo-error slds-text-color_weak slds-p-horizontal_small">
+                <lightning-icon
+                    icon-name="utility:warning"
+                    size="x-small"
+                    class="slds-m-right_x-small">
+                </lightning-icon>
+                Unable to load promotions.
+            </div>
+        </lwc:if>
+
+        <!-- ── Loaded — promotions exist ────────────────────────────── -->
+        <lwc:if isTrue={hasPromotions}>
+            <div class="promo-scroll-container">
+                <!-- Navigation arrows (desktop) -->
+                <button class="scroll-btn scroll-btn--left"
+                        onclick={handleScrollLeft}
+                        title="Scroll left"
+                        aria-label="Scroll promotions left">
+                    <lightning-icon
+                        icon-name="utility:chevronleft"
+                        size="x-small"
+                        alternative-text="Left">
+                    </lightning-icon>
+                </button>
+
+                <div class="promo-track" data-track>
+                    <template for:each={promotions} for:item="promo">
+                        <div key={promo.promotionId} class="promo-card">
+                            <!-- Multiplier badge -->
+                            <div class="promo-multiplier-badge">
+                                {promo.bonusMultiplier}
+                            </div>
+
+                            <!-- Card content -->
+                            <div class="promo-card-body">
+                                <h3 class="promo-name">{promo.name}</h3>
+
+                                <lwc:if isTrue={promo.description}>
+                                    <p class="promo-description">{promo.description}</p>
+                                </lwc:if>
+
+                                <div class="promo-meta">
+                                    <!-- Eligible tier badge -->
+                                    <span class={getTierBadgeCss(promo.eligibleTier)}>
+                                        {promo.eligibleTier}
+                                    </span>
+
+                                    <!-- Category badge -->
+                                    <lwc:if isTrue={promo.productCategory}>
+                                        <span class="promo-category-badge">
+                                            {promo.productCategory}
+                                        </span>
+                                    </lwc:if>
+                                </div>
+
+                                <!-- Validity dates -->
+                                <p class="promo-dates">
+                                    Valid: {formatDate(promo.startDate)} — {formatDate(promo.endDate)}
+                                </p>
+                            </div>
+
+                            <!-- CTA button -->
+                            <lwc:if isTrue={promo.ctaUrl}>
+                                <div class="promo-card-footer">
+                                    <a href={promo.ctaUrl}
+                                       class="promo-cta-link"
+                                       target="_blank"
+                                       rel="noopener noreferrer">
+                                        Shop Now
+                                        <lightning-icon
+                                            icon-name="utility:forward"
+                                            size="x-small"
+                                            class="slds-m-left_xx-small">
+                                        </lightning-icon>
+                                    </a>
+                                </div>
+                            </lwc:if>
+                        </div>
+                    </template>
+                </div>
+
+                <button class="scroll-btn scroll-btn--right"
+                        onclick={handleScrollRight}
+                        title="Scroll right"
+                        aria-label="Scroll promotions right">
+                    <lightning-icon
+                        icon-name="utility:chevronright"
+                        size="x-small"
+                        alternative-text="Right">
+                    </lightning-icon>
+                </button>
+            </div>
+
+            <!-- Refresh indicator -->
+            <div class="promo-footer">
+                <span class="promo-refresh-label">
+                    Updated {lastRefreshedLabel}
+                </span>
+                <button class="slds-button slds-button_icon promo-refresh-btn"
+                        onclick={handleManualRefresh}
+                        title="Refresh promotions">
+                    <lightning-icon
+                        icon-name="utility:refresh"
+                        size="x-small"
+                        alternative-text="Refresh">
+                    </lightning-icon>
+                </button>
+            </div>
+        </lwc:if>
+
+        <!-- ── Empty state ───────────────────────────────────────────── -->
+        <lwc:if isTrue={showEmptyState}>
+            <div class="promo-empty slds-p-around_medium">
+                <div class="promo-empty-icon">🌸</div>
+                <p class="promo-empty-title">Check back soon for exciting offers!</p>
+                <p class="promo-empty-subtitle">
+                    New promotions are added regularly for our loyalty members.
+                </p>
+            </div>
+        </lwc:if>
+
+    </div>
+</template>

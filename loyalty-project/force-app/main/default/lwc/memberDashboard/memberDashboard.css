@@ -1,0 +1,245 @@
+/* memberDashboard.css — Experience Cloud member home page styles
+   Mobile-first using SLDS utility classes + custom overrides.
+*/
+
+/* ── Hero section ───────────────────────────────────────────────────────────── */
+.hero-section {
+    border-radius: 12px;
+    margin-bottom: 1.5rem;
+}
+
+.hero-section--silver {
+    background: linear-gradient(135deg, #e8e8e8 0%, #c0c0c0 100%);
+    color: #333;
+}
+
+.hero-section--gold {
+    background: linear-gradient(135deg, #fff9e6 0%, #ffd700 100%);
+    color: #5a3e00;
+}
+
+.hero-section--platinum {
+    background: linear-gradient(135deg, #f5f5f5 0%, #e5e4e2 100%);
+    color: #2e2e2e;
+}
+
+.hero-section--bronze {
+    background: linear-gradient(135deg, #f5e6d8 0%, #cd7f32 100%);
+    color: #4a2800;
+}
+
+/* ── Member identity ─────────────────────────────────────────────────────────── */
+.member-greeting {
+    font-size: 0.875rem;
+    opacity: 0.8;
+    margin: 0 0 0.25rem 0;
+}
+
+.member-name {
+    font-size: 1.75rem;
+    font-weight: 700;
+    margin: 0 0 0.25rem 0;
+}
+
+.member-number {
+    font-size: 0.75rem;
+    opacity: 0.7;
+    margin: 0;
+}
+
+/* ── Tier badge ──────────────────────────────────────────────────────────────── */
+.tier-badge {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 0.75rem 1.5rem;
+    border-radius: 50px;
+    font-weight: 700;
+    font-size: 1rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.tier-badge--silver   { background: rgba(192, 192, 192, 0.3); border: 2px solid #c0c0c0; }
+.tier-badge--gold     { background: rgba(255, 215, 0, 0.3);   border: 2px solid #ffd700; }
+.tier-badge--platinum { background: rgba(229, 228, 226, 0.3); border: 2px solid #9e9e9e; }
+.tier-badge--bronze   { background: rgba(205, 127, 50, 0.3);  border: 2px solid #cd7f32; }
+
+.tier-icon { font-size: 1.5rem; line-height: 1; }
+.tier-label { margin-top: 0.25rem; font-size: 0.75rem; }
+
+/* ── Points balance ──────────────────────────────────────────────────────────── */
+.points-balance-section {
+    text-align: center;
+}
+
+.points-display {
+    display: flex;
+    align-items: baseline;
+    justify-content: center;
+    gap: 0.5rem;
+}
+
+.points-number {
+    font-size: 3rem;
+    font-weight: 800;
+    line-height: 1;
+}
+
+.points-label {
+    font-size: 1rem;
+    font-weight: 600;
+    opacity: 0.8;
+}
+
+.bonus-points-label {
+    font-size: 0.875rem;
+    opacity: 0.7;
+    margin: 0.25rem 0 0 0;
+    text-align: center;
+}
+
+/* ── Tier progress ───────────────────────────────────────────────────────────── */
+.tier-progress-section {
+    background: rgba(255, 255, 255, 0.4);
+    border-radius: 8px;
+    padding: 0.75rem 1rem;
+}
+
+.progress-tier-label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    opacity: 0.8;
+}
+
+.progress-label {
+    font-size: 0.75rem;
+    opacity: 0.7;
+    text-align: center;
+    margin: 0;
+}
+
+/* ── Quick actions ───────────────────────────────────────────────────────────── */
+.quick-actions-row {
+    margin-top: 1rem;
+}
+
+/* ── Section titles ──────────────────────────────────────────────────────────── */
+.section-title {
+    font-size: 1.125rem;
+    font-weight: 700;
+    color: #032d60;
+    margin: 0 0 0.75rem 0;
+    padding-bottom: 0.5rem;
+    border-bottom: 2px solid #e4e4e4;
+}
+
+/* ── Voucher cards ───────────────────────────────────────────────────────────── */
+.voucher-card {
+    background: #fff;
+    border: 1px solid #e4e4e4;
+    border-radius: 10px;
+    padding: 1rem;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+    height: 100%;
+}
+
+.voucher-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.5rem;
+}
+
+.voucher-type {
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    color: #706e6b;
+}
+
+.voucher-status { font-size: 0.7rem; padding: 0.2rem 0.5rem; border-radius: 12px; }
+.voucher-status--active  { background: #d4f5e9; color: #027858; }
+.voucher-status--expired { background: #fce4e4; color: #ba0517; }
+.voucher-status--redeemed { background: #f4f6fe; color: #3a3a3a; }
+
+.voucher-value {
+    font-size: 1.75rem;
+    font-weight: 800;
+    color: #032d60;
+    margin: 0.5rem 0;
+}
+
+.voucher-code {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    font-family: monospace;
+    background: #f4f6fe;
+    padding: 0.4rem 0.6rem;
+    border-radius: 4px;
+}
+
+.code-label { font-size: 0.7rem; color: #706e6b; }
+.code-value  { font-size: 0.85rem; font-weight: 600; flex: 1; }
+
+.voucher-expiry {
+    font-size: 0.75rem;
+    color: #706e6b;
+    margin: 0.5rem 0 0 0;
+}
+
+/* ── Transaction list ────────────────────────────────────────────────────────── */
+.transaction-list {
+    border: 1px solid #e4e4e4;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.transaction-row {
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid #f3f3f3;
+    background: #fff;
+    transition: background 0.15s;
+}
+
+.transaction-row:last-child { border-bottom: none; }
+.transaction-row:hover { background: #f8f8ff; }
+
+.txn-description {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: #032d60;
+}
+
+.txn-date {
+    font-size: 0.75rem;
+    color: #706e6b;
+}
+
+.txn-points {
+    font-size: 1rem;
+    font-weight: 700;
+    min-width: 80px;
+    text-align: right;
+}
+
+.txn-points--earn   { color: #027858; }
+.txn-points--redeem { color: #ba0517; }
+
+.channel-icon { vertical-align: middle; }
+
+/* ── Member dashboard wrapper ────────────────────────────────────────────────── */
+.member-dashboard {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 1rem;
+}
+
+/* ── Mobile responsive ───────────────────────────────────────────────────────── */
+@media (max-width: 480px) {
+    .points-number { font-size: 2.25rem; }
+    .member-name   { font-size: 1.375rem; }
+    .tier-badge    { padding: 0.5rem 1rem; }
+    .voucher-value { font-size: 1.375rem; }
+}

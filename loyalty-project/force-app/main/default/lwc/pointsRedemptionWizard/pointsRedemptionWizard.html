@@ -1,0 +1,285 @@
+<!-- pointsRedemptionWizard.html
+     4-step redemption modal for Experience Cloud.
+     Step 1: Choose reward type
+     Step 2: Select points amount
+     Step 3: Confirm and submit
+     Step 4: Success — show voucher code
+     API v62.0 — uses lwc:if / lwc:else (not if:true).
+-->
+<template>
+    <!-- Modal backdrop -->
+    <div class="modal-backdrop" onclick={handleBackdropClick}></div>
+
+    <!-- Modal container -->
+    <div class="redemption-modal" role="dialog" aria-modal="true"
+         aria-labelledby="wizard-title">
+        <!-- Modal header -->
+        <div class="modal-header">
+            <h2 id="wizard-title" class="modal-title">Redeem BeautyPoints</h2>
+            <button class="slds-button slds-button_icon modal-close"
+                    onclick={handleClose}
+                    title="Close">
+                <lightning-icon
+                    icon-name="utility:close"
+                    alternative-text="Close"
+                    size="small">
+                </lightning-icon>
+            </button>
+        </div>
+
+        <!-- Step indicator -->
+        <div class="step-indicator slds-p-horizontal_medium">
+            <template for:each={steps} for:item="step">
+                <div key={step.number} class={step.cssClass}>
+                    <div class="step-circle">{step.number}</div>
+                    <span class="step-label">{step.label}</span>
+                </div>
+            </template>
+        </div>
+
+        <!-- Modal body -->
+        <div class="modal-body slds-p-around_medium">
+
+            <!-- ── STEP 1 — Choose Reward Type ─────────────────────────── -->
+            <lwc:if isTrue={isStep1}>
+                <p class="step-intro">
+                    Choose how you'd like to redeem your
+                    <strong>{formattedBalance} BeautyPoints</strong>.
+                </p>
+                <div class="reward-cards slds-grid slds-gutters slds-wrap">
+                    <!-- Discount Voucher (all tiers) -->
+                    <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2">
+                        <button class={getRewardCardCss('DiscountVoucher')}
+                                data-type="DiscountVoucher"
+                                onclick={handleRewardTypeSelect}>
+                            <div class="reward-icon">🏷️</div>
+                            <div class="reward-title">Discount Voucher</div>
+                            <div class="reward-subtitle">
+                                500 pts = $5 off your next purchase
+                            </div>
+                            <div class="reward-tier-badge">All Members</div>
+                        </button>
+                    </div>
+                    <!-- Free Product Voucher (Gold+) -->
+                    <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2">
+                        <button class={getRewardCardCssGold('FreeProductVoucher')}
+                                data-type="FreeProductVoucher"
+                                onclick={handleRewardTypeSelect}
+                                disabled={isNotGoldOrPlatinum}>
+                            <div class="reward-icon">🎁</div>
+                            <div class="reward-title">Free Product</div>
+                            <div class="reward-subtitle">
+                                1,000 pts = Choose a free product
+                            </div>
+                            <div class="reward-tier-badge reward-tier-badge--gold">
+                                Gold &amp; Platinum
+                            </div>
+                        </button>
+                    </div>
+                    <!-- Partner Reward (Platinum only) -->
+                    <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2">
+                        <button class={getRewardCardCssPlatinum('PartnerReward')}
+                                data-type="PartnerReward"
+                                onclick={handleRewardTypeSelect}
+                                disabled={isNotPlatinum}>
+                            <div class="reward-icon">💎</div>
+                            <div class="reward-title">Partner Reward</div>
+                            <div class="reward-subtitle">
+                                2,000 pts = Premium partner experience
+                            </div>
+                            <div class="reward-tier-badge reward-tier-badge--platinum">
+                                Platinum Only
+                            </div>
+                        </button>
+                    </div>
+                </div>
+            </lwc:if>
+
+            <!-- ── STEP 2 — Select Points Amount ───────────────────────── -->
+            <lwc:if isTrue={isStep2}>
+                <div class="step2-container">
+                    <p class="step-intro">
+                        Redeeming: <strong>{selectedRewardLabel}</strong><br/>
+                        Available balance: <strong>{formattedBalance} pts</strong>
+                    </p>
+
+                    <div class="points-input-section">
+                        <label class="slds-form-element__label" for="pointsInput">
+                            Points to redeem (min {minRedemptionPoints})
+                        </label>
+                        <div class="slds-form-element__control">
+                            <lightning-input
+                                type="number"
+                                id="pointsInput"
+                                value={pointsToRedeem}
+                                min={minRedemptionPoints}
+                                max={maxRedeemablePoints}
+                                step="100"
+                                onchange={handlePointsChange}
+                                label="Points to redeem"
+                                variant="label-hidden">
+                            </lightning-input>
+                        </div>
+                    </div>
+
+                    <!-- Live preview -->
+                    <div class="redemption-preview slds-m-top_medium">
+                        <div class="preview-row">
+                            <span class="preview-label">Points cost:</span>
+                            <span class="preview-value">{formattedPointsToRedeem} pts</span>
+                        </div>
+                        <div class="preview-row preview-row--highlight">
+                            <span class="preview-label">Discount value:</span>
+                            <span class="preview-value preview-value--large">
+                                ${formattedDiscountValue}
+                            </span>
+                        </div>
+                        <div class="preview-row">
+                            <span class="preview-label">Remaining balance:</span>
+                            <span class={remainingBalanceCss}>
+                                {formattedRemainingBalance} pts
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Validation error -->
+                    <lwc:if isTrue={hasStep2Error}>
+                        <p class="step-error slds-m-top_small">{step2ErrorMessage}</p>
+                    </lwc:if>
+                </div>
+            </lwc:if>
+
+            <!-- ── STEP 3 — Confirm and Submit ─────────────────────────── -->
+            <lwc:if isTrue={isStep3}>
+                <div class="step3-container">
+                    <h3 class="confirm-title">Confirm Redemption</h3>
+
+                    <div class="confirmation-summary">
+                        <div class="summary-row">
+                            <span class="summary-label">Reward type:</span>
+                            <span class="summary-value">{selectedRewardLabel}</span>
+                        </div>
+                        <div class="summary-row">
+                            <span class="summary-label">Points to deduct:</span>
+                            <span class="summary-value">{formattedPointsToRedeem} pts</span>
+                        </div>
+                        <div class="summary-row summary-row--highlight">
+                            <span class="summary-label">Discount value:</span>
+                            <span class="summary-value">${formattedDiscountValue}</span>
+                        </div>
+                        <div class="summary-row">
+                            <span class="summary-label">Voucher valid for:</span>
+                            <span class="summary-value">90 days from today</span>
+                        </div>
+                        <div class="summary-row">
+                            <span class="summary-label">Balance after:</span>
+                            <span class="summary-value">{formattedRemainingBalance} pts</span>
+                        </div>
+                    </div>
+
+                    <div class="slds-m-top_medium">
+                        <lightning-input
+                            type="checkbox"
+                            label="I agree to the loyalty reward terms and conditions."
+                            checked={termsAccepted}
+                            onchange={handleTermsChange}>
+                        </lightning-input>
+                    </div>
+
+                    <!-- Server error -->
+                    <lwc:if isTrue={hasSubmitError}>
+                        <div class="slds-notify slds-notify_alert slds-theme_error
+                                    slds-m-top_small" role="alert">
+                            {submitErrorMessage}
+                        </div>
+                    </lwc:if>
+                </div>
+            </lwc:if>
+
+            <!-- ── STEP 4 — Success ─────────────────────────────────────── -->
+            <lwc:if isTrue={isStep4}>
+                <div class="step4-container">
+                    <div class="success-icon">🎉</div>
+                    <h3 class="success-title">Voucher Generated!</h3>
+                    <p class="success-subtitle">
+                        Your voucher code has been sent to your email address.
+                    </p>
+
+                    <div class="voucher-code-display">
+                        <p class="voucher-code-label">Your voucher code:</p>
+                        <div class="voucher-code-box">
+                            <span class="voucher-code-text">{generatedVoucherCode}</span>
+                            <button class="slds-button slds-button_icon copy-btn"
+                                    onclick={handleCopyVoucherCode}
+                                    title="Copy code">
+                                <lightning-icon
+                                    icon-name="utility:copy"
+                                    size="small"
+                                    alternative-text="Copy">
+                                </lightning-icon>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="voucher-details slds-m-top_medium">
+                        <div class="detail-row">
+                            <span class="detail-label">Value:</span>
+                            <span class="detail-value">${formattedDiscountValue} off</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Valid until:</span>
+                            <span class="detail-value">{formattedExpiryDate}</span>
+                        </div>
+                    </div>
+
+                    <p class="voucher-instructions slds-m-top_medium">
+                        Use this code at checkout online or show it to a store associate.
+                    </p>
+                </div>
+            </lwc:if>
+
+        </div>
+
+        <!-- Modal footer -->
+        <div class="modal-footer slds-p-around_medium">
+            <!-- Processing spinner -->
+            <lwc:if isTrue={isProcessing}>
+                <lightning-spinner
+                    alternative-text="Processing redemption"
+                    size="small"
+                    variant="brand"
+                    class="slds-m-right_small">
+                </lightning-spinner>
+            </lwc:if>
+
+            <!-- Back button (steps 2 and 3) -->
+            <lwc:if isTrue={showBackButton}>
+                <lightning-button
+                    label="Back"
+                    variant="neutral"
+                    onclick={handleBack}
+                    disabled={isProcessing}
+                    class="slds-m-right_small">
+                </lightning-button>
+            </lwc:if>
+
+            <!-- Next / Confirm / Close button -->
+            <lwc:if isTrue={isStep4}>
+                <lightning-button
+                    label="Close"
+                    variant="brand"
+                    onclick={handleSuccessClose}>
+                </lightning-button>
+            </lwc:if>
+            <lwc:else>
+                <lightning-button
+                    label={primaryButtonLabel}
+                    variant="brand"
+                    onclick={handlePrimaryAction}
+                    disabled={isPrimaryDisabled}>
+                </lightning-button>
+            </lwc:else>
+        </div>
+
+    </div>
+</template>
